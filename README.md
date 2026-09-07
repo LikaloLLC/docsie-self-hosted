@@ -181,9 +181,9 @@ is not automatically included or verified in the published image/chart release.
 | --- | --- |
 | Core knowledge base and baseline services | Published Kubernetes preview; compatible registry image access required |
 | Local or hosted AI | Configuration procedures available; verify the selected models and organization routing |
-| Dokuta/video processing | Development full-stack chart; complete downloadable image set still pending |
+| Dokuta/video processing | Public AMD64/ARM64 UI, API and Celery images available; full workflow qualification and remaining platform dependencies still apply |
 | Local transcription | External Whisper-compatible endpoint supported; server/model bundle pending |
-| Local TTS and interactive voice | Chatterbox, LiveKit and worker packaging/wiring pending; Dokuta voice APIs disabled by default |
+| Local TTS and interactive voice | Public LiveKit worker image available; server/model packaging and deployment wiring still required; Dokuta voice APIs disabled by default |
 | Learn, Forms, multilingual workflows, comparison, policy review and automation | Application capabilities; verify image version, feature configuration and dependencies for the chosen workflow; no separately qualified public presets yet |
 | Meeting capture and external integrations | Require their own services, credentials and network access; not bundled by the baseline chart |
 | AWS one-click and complete offline bundle | Not released |
@@ -211,6 +211,23 @@ Or:
 install and verify the result. [Use-case procedures](docs/INSTALL_BY_USE_CASE.md)
 map outcomes to dependencies and acceptance checks. Multiple use cases should
 share one Docsie installation where appropriate.
+
+## System requirements and costs
+
+Size the application separately from the model runtimes. Read the
+[sizing and TCO guide](docs/SIZING_AND_COST.md) for deployment reference footprints,
+hosted versus local AI, Groq transcription, TTS pricing and a monthly cost worksheet.
+
+| Evaluation setup | Starting point |
+| --- | --- |
+| Full application profile with external inference | **Planning estimate:** 16 vCPU, 64 GiB RAM and 400 GB SSD working capacity; add retained data and backups |
+| Local AI | Add a separately sized model host; model memory, context and concurrency determine capacity |
+| Kubernetes | Reachable cluster, persistent storage, Helm 3, kubectl, configured hostname/storage and access to every required image |
+
+These are evaluation planning numbers, **not benchmarked minimums or a user-count
+capacity guarantee**. The full chart declares about 11.35 vCPU / 25.31 GiB before
+unreserved services, Kubernetes overhead, bursts and model runtimes. The complete
+stack still has image-access requirements described below.
 
 ## Start here
 

@@ -1,5 +1,7 @@
 # Existing Kubernetes / local Linux preview
 
+Plan application and inference capacity separately using the [system sizing and TCO guide](SIZING_AND_COST.md). Its pilot envelope is an estimate, not a validated minimum.
+
 This path requires a reachable Kubernetes cluster, persistent storage, Helm,
 and registry credentials issued by Docsie. The initial application image is
 x86_64. See RELEASE_STATUS.md before attempting installation.

@@ -1,5 +1,7 @@
 # Docsie self-hosted documentation
 
+- [System sizing and total cost of ownership](SIZING_AND_COST.md): application/model capacity, hosted inference prices and monthly cost worksheet.
+
 [Main README](../README.md) · [Installation](INSTALL_KUBERNETES.md) · [Agent instructions](../AGENTS.md)
 
 ## Choose your path
