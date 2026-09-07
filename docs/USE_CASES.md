@@ -5,6 +5,11 @@ self-hosted installation runs the application and its data services on your own
 infrastructure. You can connect local AI services or choose hosted providers.
 Self-hosting the application does not automatically make every AI call local.
 
+The [main README](../README.md#what-you-can-use-docsie-for) contains the full
+product overview, including multilingual/versioned publishing, knowledge imports,
+Docsie Learn, Forms, policy review, workflows, API/MCP automation and voice.
+The sections below provide additional deployment context for selected use cases.
+
 Start with the outcome you want. Your installation agent can translate that
 outcome into services and configuration using the
 [installation procedures](INSTALL_BY_USE_CASE.md).

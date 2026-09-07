@@ -19,6 +19,28 @@ separate Docsie installations. Reuse information the operator has already suppli
 | “Generate narration” | Compatible application with TTS provider | Hosted TTS or local Chatterbox backend/model | App integration exists; local TTS bundle pending |
 | “Run interactive voice agents” | Voice services plus Docsie/Dokuta | LiveKit, agent worker, STT, LLM, TTS and session storage | Public packaging and local provider wiring pending |
 
+### Additional application workflows
+
+Use the [full product overview](../README.md#what-you-can-use-docsie-for) when the
+operator requests a use case beyond the initial profiles. Do not restrict the
+conversation to the first six rows above.
+
+| Requested outcome | Configuration to inspect | Verify with the operator's sample |
+| --- | --- | --- |
+| Multilingual and versioned documentation | Application build, translation provider, languages, glossary and publishing | Publish two versions; translate an article and inspect the selected language |
+| Migrate existing knowledge | Supported parser/import path, converters and any required OCR provider | Import representative source files; inspect structure, text and images |
+| Employee/customer training with Docsie Learn | Learn-capable image and Reader assets, learner authentication, course assignments, Forms and email delivery | Publish a course; sign in as a learner; complete a lesson and quiz and inspect persisted progress |
+| SCORM delivery | Course export implementation in selected build and target LMS | Export, import into the intended LMS and verify launch/progress behavior |
+| Forms and surveys | Forms-capable image, publishing/access settings and submission storage | Publish a form, submit it and inspect the saved response |
+| Policy review | Required analysis service, policy inputs, models and media dependencies | Analyze a known example and inspect findings against the supplied policy |
+| Workflow automation | Recipes/tools present in image, worker queues, permissions and integration credentials | Run a small requested workflow and inspect its saved output and status |
+| API/MCP access | Self-hosted route availability, authentication, scoped credentials and client configuration | Authenticate to this installation and retrieve an authorized source; do not substitute the SaaS endpoint |
+| Meeting capture | Recording integration service, credentials and provider/network requirements | Capture an authorized test meeting and verify its recording is available for processing |
+
+These capabilities do not have separately qualified public installation presets.
+Resolve their image/dependency requirements explicitly; do not treat baseline
+Helm success as proof of training, translation or integration readiness.
+
 Ask for missing infrastructure details only after selecting the use case: cluster,
 namespace, image access, storage, URL, hardware and local/hosted model preference.
 Do not require the operator to understand Helm profiles to express their needs.

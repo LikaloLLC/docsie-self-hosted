@@ -1,11 +1,9 @@
 # Docsie Self-Hosted
 
-Create, organize and publish your team's knowledge on infrastructure you control.
-Docsie supports knowledge bases, AI-assisted documentation, video-to-docs and
-source comparison. Speech and voice-agent integrations are also part of the
-application; their self-hosted packaging is still in progress.
-
-Deploy the proprietary Docsie application on Kubernetes you control.
+Docsie is a platform for creating, managing, translating and publishing knowledge,
+turning source material into documentation, comparing content, delivering training,
+and automating documentation workflows. Deploy the proprietary application on
+Kubernetes you control, with your choice of local or hosted AI services.
 
 **v0.2.0-preview.2 — Kubernetes deployment preview.** A clean local installation,
 automatic migrations, administrator login, worker health, MinIO storage and
@@ -16,17 +14,167 @@ Request compatible image access from Docsie before installing. Default satellite
 image tags are not yet a publicly downloadable image set. AI workflows have not
 been certified end to end with Ollama in this release.
 
-## Choose what you want to do
+## What you can use Docsie for
 
-- Maintain internal procedures, onboarding guides or a customer help center.
-- Write documentation and answer questions with AI over your knowledge base.
-- Turn recorded walkthroughs into guides with Dokuta.
-- Review differences between versions of source material.
-- Generate narration or run voice agents as their deployment components become available.
+Docsie connects documentation, source analysis, training and the workflows that
+keep organizational knowledge useful. Teams can work from existing documents,
+recordings and websites, develop that material into maintained content, publish
+it to the right audience, and use it for answers, learning and review.
 
-Read [use cases and availability](docs/USE_CASES.md), then follow
-[installation by use case](docs/INSTALL_BY_USE_CASE.md). Tell your installation
-agent the outcome you want; it can select the required services and configuration.
+### Product documentation, help centers and internal knowledge bases
+
+Create product manuals, implementation guides, support articles, employee
+handbooks, runbooks and standard operating procedures. Organize them into
+workspaces, shelves, books and articles, then publish public documentation or
+controlled-access portals for employees, customers and partners. Custom domains
+and branded portals let each audience access the documentation in its own context.
+
+**Example:** maintain a customer help center and a private engineering runbook
+from the same documentation platform, with different access rules.
+
+### Multilingual documentation and product versions
+
+Maintain documentation for different product releases and languages. Translate
+content, refresh translations when the source changes, and maintain glossaries
+and style guides so teams use consistent terminology.
+
+**Example:** publish installation instructions for two supported product versions
+in several languages without treating every copy as an unrelated document.
+
+### Import, consolidate and maintain existing knowledge
+
+Bring existing PDFs, Word documents, Markdown and Confluence content into an
+editable knowledge base. Use AI-assisted writing and rewriting to organize raw
+material into articles, manuals and procedures. Preserve the source material for
+review and update the resulting documentation as requirements change.
+
+**Example:** consolidate a folder of legacy manuals into structured product
+documentation that your team can maintain and publish.
+
+### Video-to-docs and operational knowledge capture
+
+Turn recorded demonstrations, software walkthroughs and training videos into
+step-by-step guides with screenshots. Dokuta supplies the video-processing
+pipeline, with vision analysis and transcription for narrated material.
+Meeting-recording integrations can also capture material for follow-up processing.
+
+**Example:** record an experienced operator demonstrating a procedure, generate a
+draft guide, review its steps and screenshots, and publish it for the next shift.
+
+### AI search, questions and documentation agents
+
+Ask questions over documentation, retrieve supporting sources and use agents to
+create, edit, organize and publish content. Scope the work to the relevant
+workspace or documentation rather than treating all company information as one
+undifferentiated collection.
+
+**Example:** help a support engineer answer a configuration question using the
+product documentation, then improve the article that was missing an explanation.
+
+### Content comparison, technical research and change analysis
+
+Compare documents, videos and website-derived material. Investigate differences
+between versions or compare different products, specifications and procedures.
+Use structured findings and source references to explore the evidence and save
+comparison results as documentation.
+
+**Example:** compare two vendors' technical manuals against the requirements your
+engineering team cares about, or inspect how a recorded workflow changed between
+software releases. The useful outcome is an explained difference with evidence,
+not simply a list of changed words.
+
+### Docsie Learn: onboarding, training and certification
+
+Build learning courses from documentation, arrange modules and learning paths,
+assign them to an audience and track learner progress. Combine reading material
+with quizzes, assessments and certification workflows. Course export tooling also
+includes SCORM; compatibility with the intended LMS must be checked for the
+selected application build.
+
+**Example:** turn your operating procedures into employee onboarding with ordered
+lessons and knowledge checks, or deliver product training to customers and partners.
+
+### Forms, quizzes, surveys and assessments
+
+Create and publish forms alongside your knowledge content, collect submissions,
+and use quizzes or assessments to check understanding. Forms can support training
+as well as operational information collection.
+
+**Example:** attach a knowledge check to a procedure or collect structured feedback
+from readers about an onboarding guide.
+
+### Policy and compliance review
+
+Analyze text, audio or video against supplied policies and review the resulting
+findings. Combine policy documentation, operational evidence and training so the
+people reviewing a procedure can trace the material behind a finding.
+
+**Example:** review a recorded procedure against your organization's documented
+requirements and use the findings to guide a human review and documentation update.
+This is a review workflow; generated findings do not confer regulatory certification.
+
+### Documentation workflows and automation
+
+Coordinate work with workflow boards, steps and statuses. Run reusable workflow
+recipes for repeated documentation operations and use agents to perform scoped
+actions. API and MCP integrations let other applications and AI clients search
+knowledge and participate in content-generation and publishing workflows.
+
+**Example:** repeat an import, review and publishing process for a series of
+manuals, or connect an AI client to your documentation through an authenticated
+self-hosted endpoint.
+
+### Narration, voice agents and presentations
+
+Generate speech from text with Chatterbox or hosted TTS providers. Voice-agent
+and presentation integrations extend this into interactive spoken experiences;
+these require the corresponding media services and agent workers in addition to
+the knowledge base and models.
+
+**Example:** produce spoken training material or configure a conversational agent
+for a guided session. Audio-file generation and a live voice conversation have
+different deployment requirements.
+
+## Which parts can I install today?
+
+The use cases above describe Docsie's application capabilities. This repository
+packages them for self-hosting in stages; a feature present in application source
+is not automatically included or verified in the published image/chart release.
+
+| Area | Self-hosted distribution status |
+| --- | --- |
+| Core knowledge base and baseline services | Published Kubernetes preview; compatible registry image access required |
+| Local or hosted AI | Configuration procedures available; verify the selected models and organization routing |
+| Dokuta/video processing | Development full-stack chart; complete downloadable image set still pending |
+| Local transcription | External Whisper-compatible endpoint supported; server/model bundle pending |
+| Local TTS and interactive voice | Chatterbox, LiveKit and worker packaging/wiring pending; Dokuta voice APIs disabled by default |
+| Learn, Forms, multilingual workflows, comparison, policy review and automation | Application capabilities; verify image version, feature configuration and dependencies for the chosen workflow; no separately qualified public presets yet |
+| Meeting capture and external integrations | Require their own services, credentials and network access; not bundled by the baseline chart |
+| AWS one-click and complete offline bundle | Not released |
+
+Choose local, hosted or mixed providers independently for text, vision,
+embeddings, transcription and speech. For a local-only deployment, verify the
+entire route, including fallbacks, downloaded models and browser assets.
+
+## Tell your installation agent the outcome you want
+
+You do not need to choose a Helm profile first. For example:
+
+> Install Docsie for internal SOPs, employee training and quizzes. Use our existing
+> Kubernetes cluster and local models. Read AGENTS.md, identify the required image
+> versions and components, prepare the configuration, and verify publishing plus
+> a learner completing a lesson and quiz. Report anything not packaged yet.
+
+Or:
+
+> We want to turn recorded walkthroughs into guides and compare new versions.
+> Use our Ollama server and local transcription endpoint. Check the required
+> images and install the available services into our chosen namespace.
+
+[AGENTS.md](AGENTS.md) tells agents how to select a target, prepare configuration,
+install and verify the result. [Use-case procedures](docs/INSTALL_BY_USE_CASE.md)
+map outcomes to dependencies and acceptance checks. Multiple use cases should
+share one Docsie installation where appropriate.
 
 ## Start here
 
