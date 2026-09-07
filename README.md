@@ -13,6 +13,9 @@ been certified end to end with Ollama in this release.
 
 ## Start here
 
+Installing with an AI coding agent? Point it at [AGENTS.md](AGENTS.md) for the
+installation workflow, configuration choices and verification steps.
+
 1. [Request image access](https://www.docsie.io/demo/) for a personal installation
    or business evaluation.
 2. Follow [Kubernetes installation](docs/INSTALL_KUBERNETES.md).
