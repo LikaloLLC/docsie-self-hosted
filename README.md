@@ -16,7 +16,7 @@ been certified end to end with Ollama in this release.
 1. [Request image access](https://www.docsie.io/demo/) for a personal installation
    or business evaluation.
 2. Follow [Kubernetes installation](docs/INSTALL_KUBERNETES.md).
-3. Configure [Ollama or another local model server](docs/LOCAL_MODELS.md).
+3. Follow [Install Docsie with Ollama](docs/LOCAL_MODELS.md) for the complete walkthrough, or adapt it to another local model server.
 4. Run the [acceptance checklist](docs/ACCEPTANCE.md) for your workflows.
 
 ```bash
