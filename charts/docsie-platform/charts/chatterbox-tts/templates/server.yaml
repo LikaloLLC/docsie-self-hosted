@@ -1,0 +1,111 @@
+{{- $global := .Values.global | default dict }}
+{{- $tts := $global.chatterbox | default dict }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatterbox-config
+data:
+  config.yaml: |
+    server:
+      host: 0.0.0.0
+      port: 8004
+      use_ngrok: false
+      use_auth: false
+      log_file_path: /app/logs/tts_server.log
+    model:
+      repo_id: {{ $tts.model | default "chatterbox-turbo" | quote }}
+    tts_engine:
+      device: {{ .Values.device | quote }}
+      predefined_voices_path: voices
+      reference_audio_path: reference_audio
+      default_voice_id: {{ $tts.voice | default "Emily.wav" | quote }}
+    paths:
+      model_cache: /app/hf_cache
+      output: /app/outputs
+    audio_output:
+      format: wav
+      sample_rate: 24000
+      save_to_disk: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatterbox-tts
+spec:
+  type: ClusterIP
+  selector: {app.kubernetes.io/name: chatterbox-tts}
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatterbox-tts
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: chatterbox-tts}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chatterbox-tts
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        checksum/config: {{ printf "%s-%s-%s" (.Values.device | toString) ($tts.model | default "chatterbox-turbo") ($tts.voice | default "Emily.wav") | sha256sum }}
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $global.imagePullSecret }}
+      imagePullSecrets: [{name: {{ . | quote }}}]
+      {{- end }}
+      containers:
+        - name: chatterbox
+          image: "{{ with $global.imageRegistry }}{{ . }}/{{ end }}{{ .Values.image.repository }}{{ if .Values.image.digest }}@{{ .Values.image.digest }}{{ else }}:{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{name: http, containerPort: 8004}]
+          env:
+            - {name: HF_HOME, value: /app/hf_cache}
+            - {name: HF_HUB_OFFLINE, value: {{ ternary "1" "0" .Values.offline | quote }}}
+            - {name: DO_NOT_TRACK, value: '1'}
+            {{- if .Values.huggingFaceTokenSecret }}
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef: {name: {{ .Values.huggingFaceTokenSecret | quote }}, key: token}
+            {{- end }}
+          volumeMounts:
+            - {name: config, mountPath: /app/config.yaml, subPath: config.yaml, readOnly: true}
+            - {name: models, mountPath: /app/hf_cache}
+          startupProbe:
+            exec:
+              command: [python3, -c, "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8004/api/model-info', timeout=5))['loaded']"]
+            periodSeconds: 10
+            timeoutSeconds: 6
+            failureThreshold: {{ div .Values.startupTimeoutSeconds 10 }}
+          readinessProbe:
+            exec:
+              command: [python3, -c, "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8004/api/model-info', timeout=5))['loaded']"]
+            periodSeconds: 20
+            timeoutSeconds: 6
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap: {name: chatterbox-config}
+        - name: models
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default "chatterbox-models" }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

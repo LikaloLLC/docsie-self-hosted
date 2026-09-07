@@ -8,6 +8,7 @@ python3 -m unittest discover -s tests -v
 mkdir -p dist
 helm dependency build charts/docsie-platform --skip-refresh
 helm package charts/prerequisites/eck-operator --destination dist
+helm package charts/docsie-platform/charts/chatterbox-tts --destination dist
 helm package charts/docsie --destination dist
 helm package charts/docsie-platform --destination dist
 RELEASE_TAG=$(python3 -c 'import yaml; print("v" + yaml.safe_load(open("charts/docsie-platform/Chart.yaml"))["version"])')

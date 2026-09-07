@@ -25,10 +25,10 @@ dependencies:
   version: 0.1.1
 - name: dokuta-onprem
   repository: ""
-  version: 0.1.0
+  version: 0.1.1
 - name: dokuta-celery-onprem
   repository: ""
-  version: 0.1.0
+  version: 0.1.1
 - name: chromadb
   repository: ""
   version: 0.1.4
@@ -47,5 +47,8 @@ dependencies:
 - name: cad-adapter
   repository: ""
   version: 0.1.0
-digest: sha256:db0bde2c96e58e25b3f492642e09bfcd723ffe15ed6390fc27d60ba78741549b
-generated: "2026-09-07T18:41:00.052384-04:00"
+- name: chatterbox-tts
+  repository: ""
+  version: 0.1.0
+digest: sha256:e86c11625388c7c8c3d03afaf955048411d3c05cd5513a3b78d4dd3401148b51
+generated: "2026-09-07T18:54:05.514866-04:00"

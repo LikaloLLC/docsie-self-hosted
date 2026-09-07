@@ -58,3 +58,5 @@ an offline bundle of images, dependencies and models.
 **Is AWS one-click ready?** No. AWS provisioning is a separate roadmap item.
 
 - [Search installation and verification](SEARCH.md) — bundled App Search, credentials and browser endpoint.
+
+- [Local text-to-speech](TEXT_TO_SPEECH.md) — optional Chatterbox CPU/GPU installation and native Apple Silicon setup.

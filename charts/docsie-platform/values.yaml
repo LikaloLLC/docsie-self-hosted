@@ -33,6 +33,14 @@ storage:
     enabled: true
 
 global:
+  chatterbox:
+    enabled: false
+    externalUrl: ""
+    model: chatterbox-turbo
+    voice: Emily.wav
+    # Optional Bearer authentication for an externally managed compatible server.
+    apiKeySecretName: ""
+    apiKeySecretKey: api-key
   appSearch:
     # Required for normal Docsie search. Disable only when supplying external search.
     enabled: true
@@ -187,3 +195,5 @@ image-processor:
 
 pdf-converter:
   fullnameOverride: pdf-converter
+
+chatterbox-tts: {}

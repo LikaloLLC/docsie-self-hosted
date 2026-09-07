@@ -1,0 +1,22 @@
+# Requires an AMD64 Linux node, NVIDIA drivers, container runtime and device plugin.
+global:
+  chatterbox:
+    enabled: true
+    model: chatterbox-turbo
+    voice: Emily.wav
+chatterbox-tts:
+  device: cuda
+  image:
+    tag: main-nvidia
+    digest: sha256:3f2dff874fcbb2c26c1de971e70f7dfaacd574824dce6c764617c315566740a6
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  resources:
+    requests:
+      cpu: '1'
+      memory: 4Gi
+      nvidia.com/gpu: '1'
+    limits:
+      cpu: '4'
+      memory: 8Gi
+      nvidia.com/gpu: '1'

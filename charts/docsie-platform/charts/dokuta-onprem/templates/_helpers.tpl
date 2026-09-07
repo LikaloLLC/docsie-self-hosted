@@ -95,3 +95,25 @@ staging/prod values with explicit env maps do not need to duplicate LLM_* keys.
 {{- end -}}
 {{- end -}}
 {{- end }}
+
+{{- define "dokuta.chatterboxEnv" -}}
+{{- $tts := (.Values.global | default dict).chatterbox | default dict }}
+{{- if or $tts.enabled $tts.externalUrl }}
+{{- $env := .Values.env | default dict }}
+{{- $endpoint := $tts.externalUrl | default "http://chatterbox-tts:8004" }}
+{{- $values := dict "CHATTERBOX_TTS_BASE_URL" $endpoint "CHATTERBOX_TTS_MODEL" $tts.model "CHATTERBOX_TTS_VOICE" $tts.voice "CHATTERBOX_TTS_ENDPOINT_PATH" "/v1/audio/speech" "DOKUTA_ENABLE_VOICE_API" "true" "CHATTERBOX_VOICE_OPTIONS_JSON" (list (dict "id" $tts.voice "name" "Local Chatterbox voice") | toJson) }}
+{{- range $key, $value := $values }}
+{{- if not (hasKey $env $key) }}
+- name: {{ $key }}
+  value: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- if and $tts.apiKeySecretName (not (hasKey $env "CHATTERBOX_TTS_API_KEY")) }}
+- name: CHATTERBOX_TTS_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: {{ $tts.apiKeySecretName }}
+      key: {{ $tts.apiKeySecretKey | default "api-key" }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: chatterbox-tts
+description: Optional private Chatterbox text-to-speech server for Docsie and Dokuta
+version: 0.1.0
+appVersion: "915ae289340e"
+type: application

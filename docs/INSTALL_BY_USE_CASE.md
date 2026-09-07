@@ -113,8 +113,9 @@ For narration using an existing provider:
 3. Enable the required API only after checking its authentication configuration.
 4. Generate a short audio sample and listen to the saved result.
 
-For bundled local narration, the distribution still needs the Chatterbox server
-image, model artifacts, storage/resource configuration and chart wiring.
+For local narration, use the optional [Chatterbox installation](TEXT_TO_SPEECH.md):
+CPU/NVIDIA charts or a native Apple Silicon server, persistent model cache,
+Dokuta wiring and a speech-generation check.
 
 For live voice agents, the distribution additionally needs:
 

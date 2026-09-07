@@ -5,7 +5,7 @@ description: >-
   Docsie app chart plus vendored, normalized on-prem subcharts behind three
   profiles (kb, kb-ai, full). See docs/ONPREM_INSTALLER_DESIGN.md §3.
 type: application
-version: 0.2.0-preview.4
+version: 0.2.0-preview.5
 appVersion: "onprem-0.1.0"
 
 dependencies:
@@ -39,10 +39,10 @@ dependencies:
 
   # ---- full profile (video-to-docs pipeline and satellites)
   - name: dokuta-onprem
-    version: 0.1.0
+    version: 0.1.1
     condition: profiles.full
   - name: dokuta-celery-onprem
-    version: 0.1.0
+    version: 0.1.1
     condition: profiles.full
   - name: chromadb
     version: 0.1.4
@@ -64,3 +64,8 @@ dependencies:
   - name: cad-adapter
     version: 0.1.0
     condition: cadAdapter.enabled
+
+  # Optional speech output; does not enable media calls or meeting capture.
+  - name: chatterbox-tts
+    version: 0.1.0
+    condition: global.chatterbox.enabled

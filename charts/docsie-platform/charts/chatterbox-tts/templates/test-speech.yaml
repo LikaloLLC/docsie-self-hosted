@@ -1,0 +1,26 @@
+{{- $tts := (.Values.global | default dict).chatterbox | default dict }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-chatterbox-test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  enableServiceLinks: false
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+    - name: speech-test
+      image: python:3.12.10-alpine3.21
+      command:
+        - python
+        - -c
+        - |
+{{ .Files.Get "files/verify.py" | indent 10 }}
+      env:
+        - {name: CHATTERBOX_MODEL, value: {{ $tts.model | default "chatterbox-turbo" | quote }}}
+        - {name: CHATTERBOX_VOICE, value: {{ $tts.voice | default "Emily.wav" | quote }}}
+      resources:
+        requests: {cpu: 25m, memory: 32Mi}
+        limits: {cpu: '1', memory: 128Mi}

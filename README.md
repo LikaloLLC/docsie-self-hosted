@@ -214,9 +214,15 @@ share one Docsie installation where appropriate.
 
 ## Search is included
 
-Chart `0.2.0-preview.4` includes App Search in the basic KB install, with a vendored
+Chart `0.2.0-preview.5` includes App Search in the basic KB install, with a vendored
 Elastic operator, automatic credentials and an indexing/search installation test.
 [Search setup and browser access](docs/SEARCH.md).
+
+## Optional local speech
+
+Add [Chatterbox text-to-speech](docs/TEXT_TO_SPEECH.md) for narration: optional
+CPU/NVIDIA model-server charts, a native Apple Silicon installer, persistent
+model storage and Dokuta configuration. It is disabled by default.
 
 ## System requirements and costs
 
@@ -250,7 +256,7 @@ installation workflow, configuration choices and verification steps.
 ```bash
 git clone https://github.com/LikaloLLC/docsie-self-hosted.git
 cd docsie-self-hosted
-git checkout v0.2.0-preview.4
+git checkout v0.2.0-preview.5
 # Configure image access, hostname, TLS, storage and an administrator first.
 bash scripts/install-kubernetes.sh /path/to/kubeconfig docsie /path/to/values.yaml
 ```
@@ -268,7 +274,7 @@ The platform package bundles its application dependencies; the Elastic operator
 and CRDs are supplied as a separate `eck-operator-2.16.1.tgz` prerequisite. The
 source installer above handles that prerequisite automatically. For direct `.tgz`
 installation, follow [the search installation guide](docs/SEARCH.md) before
-installing `docsie-platform-0.2.0-preview.4.tgz`.
+installing `docsie-platform-0.2.0-preview.5.tgz`.
 
 ```bash
 sha256sum -c SHA256SUMS

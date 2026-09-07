@@ -21,6 +21,10 @@ if helm template docsie "$ROOT/charts/docsie-platform" --namespace "$namespace" 
 fi
 helm upgrade --install docsie "$ROOT/charts/docsie-platform" \
   --kubeconfig "$config" --namespace "$namespace" --create-namespace \
-  --values "$values" --wait --wait-for-jobs --timeout 20m
+  --values "$values" --wait --wait-for-jobs --timeout "${DOCSIE_INSTALL_TIMEOUT:-40m}"
 helm test docsie --filter name=docsie-search-test --kubeconfig "$config" --namespace "$namespace" --logs --timeout 3m
+# Only run the speech test when the optional local server is installed.
+if kubectl --kubeconfig "$config" --namespace "$namespace" get deployment chatterbox-tts >/dev/null 2>&1; then
+  helm test docsie --filter name=docsie-chatterbox-test --kubeconfig "$config" --namespace "$namespace" --logs --timeout 11m
+fi
 kubectl --kubeconfig "$config" --namespace "$namespace" get pods

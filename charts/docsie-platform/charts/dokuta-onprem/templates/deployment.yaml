@@ -38,6 +38,7 @@ spec:
               key: {{ $value.key }}
         {{- end }}
         {{- include "dokuta.llmEnv" . | nindent 8 }}
+          {{- include "dokuta.chatterboxEnv" . | nindent 8 }}
         resources:
 {{ toYaml .Values.resources | nindent 10 }}
       {{- $pullSecrets := .Values.imagePullSecrets | default list }}

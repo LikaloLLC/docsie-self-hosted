@@ -39,6 +39,7 @@ spec:
               optional: {{ $value.optional | default false }}
         {{- end }}
         {{- include "celery.llmEnv" . | nindent 8 }}
+          {{- include "celery.chatterboxEnv" . | nindent 8 }}
         resources:
 {{ toYaml .Values.resources | nindent 10 }}
       {{- $pullSecrets := .Values.imagePullSecrets | default list }}

@@ -1,0 +1,10 @@
+# Existing Chatterbox-compatible server, including a native Apple Silicon host.
+global:
+  chatterbox:
+    enabled: false
+    externalUrl: http://chatterbox.example.internal:8004
+    model: chatterbox-turbo
+    voice: Emily.wav
+    # Only set for an external service/proxy that actually enforces Bearer auth.
+    apiKeySecretName: ""
+    apiKeySecretKey: api-key

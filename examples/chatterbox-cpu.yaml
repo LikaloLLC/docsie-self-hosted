@@ -1,0 +1,11 @@
+# Merge into your main private values file, or pass as an additional Helm -f.
+# Enables only the optional TTS server. Existing Docsie/Dokuta settings stay yours.
+global:
+  chatterbox:
+    enabled: true
+    model: chatterbox-turbo
+    voice: Emily.wav
+chatterbox-tts:
+  device: cpu
+  nodeSelector:
+    kubernetes.io/arch: amd64

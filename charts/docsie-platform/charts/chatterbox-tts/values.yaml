@@ -1,0 +1,26 @@
+image:
+  repository: ghcr.io/devnen/chatterbox-tts-server
+  # Upstream CPU image at source revision 915ae289340e10c6047f27f47e22eae9bf350c32.
+  tag: main-cpu
+  digest: sha256:27bd97dc1ab1e1a6c41960c262d271c5e9f8bae5b1990db29f3a8d80ad6efe18
+  pullPolicy: IfNotPresent
+device: cpu
+nodeSelector:
+  kubernetes.io/arch: amd64
+tolerations: []
+resources:
+  requests: {cpu: '1', memory: 4Gi}
+  limits: {cpu: '4', memory: 8Gi}
+persistence:
+  enabled: true
+  existingClaim: ""
+  size: 20Gi
+  storageClass: ""
+# Online first start downloads the selected weights into the persistent cache.
+# Set offline only after populating that cache with the same model's files.
+offline: false
+huggingFaceTokenSecret: ""
+networkPolicy:
+  enabled: true
+# Inference can be slow on CPU. Probes check that the MODEL loaded, not just HTTP.
+startupTimeoutSeconds: 1800

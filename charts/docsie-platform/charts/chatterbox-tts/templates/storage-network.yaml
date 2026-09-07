@@ -1,0 +1,34 @@
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chatterbox-models
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with (.Values.persistence.storageClass | default ((.Values.global | default dict).storageClass | default "")) }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+---
+{{- end }}
+{{- if .Values.networkPolicy.enabled }}
+# The upstream server has management endpoints and no Bearer-auth enforcement.
+# Keep it private; only this namespace can connect. Requires a policy-capable CNI.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chatterbox-private
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: chatterbox-tts}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - {protocol: TCP, port: 8004}
+{{- end }}

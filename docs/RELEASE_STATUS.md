@@ -1,12 +1,16 @@
-# Docsie Self-Hosted v0.2.0-preview.4
+# Docsie Self-Hosted v0.2.0-preview.5
 
-This chart preview packages App Search as part of the basic Docsie installation.
+This preview adds optional Chatterbox text-to-speech, with pinned AMD64 CPU and
+NVIDIA image options, persistent model caching, Dokuta routing and a speech test.
+See [the speech installation guide](https://github.com/LikaloLLC/docsie-self-hosted/blob/main/docs/TEXT_TO_SPEECH.md).
+
+It also packages App Search as part of the basic Docsie installation.
 The installer provisions its Elastic operator, creates search credentials and
 runs a real indexing/search check. See [search setup and validation](SEARCH.md).
 
 ## Included
 
-- Application chart `0.3.0-preview.2`, platform chart `0.2.0-preview.4`, and
+- Application chart `0.3.0-preview.2`, platform chart `0.2.0-preview.5`, and
   Elastic's operator chart/CRDs `2.16.1` with its upstream license.
 - Elasticsearch and Enterprise Search/App Search `8.12.0`, TLS verification,
   automatic indexing and read-only signing keys, and a focused Helm search test.
@@ -24,11 +28,16 @@ connected using certificate verification. The existing local Docsie installation
 upgraded successfully through the installer with 18 service pods ready and the
 focused search test passing.
 
-Thirteen distribution/bootstrap tests, Helm lint, the distribution audit and
+Sixteen distribution/bootstrap tests, Helm lint, the distribution audit and
 chart packaging passed. Search/operator/bootstrap images support AMD64 and ARM64;
 live search validation used ARM64. The local application image was emulated.
 This is not a fresh full-platform or browser-facing portal acceptance result.
 The earlier basic installation proof is retained in [LOCAL_VALIDATION.md](LOCAL_VALIDATION.md).
+
+Native CPU speech generation passed with the pinned Chatterbox source: a
+non-silent 1.68-second, 24-kHz WAV. Linux container execution, NVIDIA inference,
+Dokuta HTTP speech integration and live calls remain separate validation targets.
+Native Mac MPS failed upstream; the native installer defaults to CPU.
 
 ## Before installing or upgrading
 
