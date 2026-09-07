@@ -16,8 +16,8 @@ separate Docsie installations. Reuse information the operator has already suppli
 | “Use AI with our documentation” | KB plus model configuration | Chat, appropriate embeddings/retrieval, organization routing | Configuration guide available; validate chosen workflow |
 | “Turn recordings into guides” | Development full profile | Dokuta, text/vision models, transcription for narration | Development rehearsal; complete image set and local Whisper bundle pending |
 | “Compare versions of our documents” | Compatible application image plus required processors | Source-format support and AI configuration | No qualified comparison preset; verify the requested workflow |
-| “Generate narration” | Compatible application with TTS provider | Hosted TTS or local Chatterbox backend/model | App integration exists; local TTS bundle pending |
-| “Run interactive voice agents” | Voice services plus Docsie/Dokuta | LiveKit, agent worker, STT, LLM, TTS and session storage | Public packaging and local provider wiring pending |
+| “Generate narration” | Compatible application with TTS provider | Hosted TTS or local Chatterbox backend/model | Optional Chatterbox chart/native installer available; see [speech setup](TEXT_TO_SPEECH.md) |
+| “Run interactive voice agents” | Voice services plus Docsie/Dokuta | LiveKit, agent worker, STT, LLM, TTS and session storage | Public worker image available; complete media deployment and local provider wiring pending |
 
 ### Additional application workflows
 
@@ -30,6 +30,11 @@ conversation to the first six rows above.
 | Multilingual and versioned documentation | Application build, translation provider, languages, glossary and publishing | Publish two versions; translate an article and inspect the selected language |
 | Migrate existing knowledge | Supported parser/import path, converters and any required OCR provider | Import representative source files; inspect structure, text and images |
 | Employee/customer training with Docsie Learn | Learn-capable image and Reader assets, learner authentication, course assignments, Forms and email delivery | Publish a course; sign in as a learner; complete a lesson and quiz and inspect persisted progress |
+| Sell courses or paid learning content | Commerce-capable image, payment integration, entitlement mapping, learner authentication and delivery | Use a provider test purchase; verify buyer access, duplicate-event handling and revocation without affecting real customers |
+| Generate PowerPoint training decks | Presentation generation/export in the image, source access, model routing and required renderers | Export a deck from an approved guide; open it and inspect text, images and layout |
+| Enrich existing documentation | Supported agent/import workflow, access to related knowledge and model configuration | Improve a short guide; verify additions against their sources and inspect the saved document |
+| Compare large technical collections | Supported parsers/OCR, indexing coverage, model limits and worker capacity | Start with known differences, omissions and conflicts; inspect evidence and coverage before increasing collection size |
+| Deliver an offline documentation reader | Air-gapped build support, reader assets, packaging/runtime and offline search | Export a portal, transfer it to a disconnected test environment and verify pages, images, links and search |
 | SCORM delivery | Course export implementation in selected build and target LMS | Export, import into the intended LMS and verify launch/progress behavior |
 | Forms and surveys | Forms-capable image, publishing/access settings and submission storage | Publish a form, submit it and inspect the saved response |
 | Policy review | Required analysis service, policy inputs, models and media dependencies | Analyze a known example and inspect findings against the supplied policy |

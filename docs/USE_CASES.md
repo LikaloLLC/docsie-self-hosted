@@ -7,7 +7,8 @@ Self-hosting the application does not automatically make every AI call local.
 
 The [main README](../README.md#what-you-can-use-docsie-for) contains the full
 product overview, including multilingual/versioned publishing, knowledge imports,
-Docsie Learn, Forms, policy review, workflows, API/MCP automation and voice.
+Docsie Learn and paid courses, Forms, presentations, knowledge enrichment,
+policy review, offline reader delivery, workflows, API/MCP automation and voice.
 The sections below provide additional deployment context for selected use cases.
 
 Start with the outcome you want. Your installation agent can translate that
@@ -70,10 +71,13 @@ Docsie/Dokuta source supports Chatterbox, OpenAI and ElevenLabs for speech
 synthesis. A live voice agent also needs audio transport, an agent worker,
 transcription, a language model and session configuration.
 
-**Installation status:** local Chatterbox and LiveKit are not currently packaged
-in this public distribution. Dokuta's voice APIs are disabled by default. The
-[voice procedure](INSTALL_BY_USE_CASE.md#voice-and-narration) describes the missing
-pieces; do not present voice as an available one-command installation yet.
+**Installation status:** optional [Chatterbox packaging](TEXT_TO_SPEECH.md) includes
+CPU/NVIDIA chart options, a native CPU installer, model caching and Dokuta routing.
+It enables the generated Dokuta voice API setting when selected; operator-managed
+Secrets need separate configuration. Native CPU speech generation passed; Linux
+container and GPU inference remain unverified. A public LiveKit worker image is
+available, but complete live-call deployment and provider wiring still require
+work. Follow the [voice procedure](INSTALL_BY_USE_CASE.md#voice-and-narration).
 
 ## Choose where AI runs
 

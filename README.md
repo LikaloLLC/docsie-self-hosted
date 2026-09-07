@@ -10,7 +10,9 @@
 
 Docsie is a platform for creating, managing, translating and publishing knowledge,
 turning source material into documentation, comparing content, delivering training,
-and automating documentation workflows. Deploy the proprietary application on
+and automating documentation workflows. Reuse the same knowledge across support,
+localization, courses, assessments and presentations, including paid learning
+content through connected commerce services. Deploy the proprietary application on
 Kubernetes you control, with your choice of local or hosted AI services.
 
 ![Docsie documentation assistant with source conversion, video comparison and research workflows](docs/assets/screenshots/documentation-assistant.png)
@@ -22,6 +24,14 @@ Kubernetes you control, with your choice of local or hosted AI services.
 **Explore:** [Use cases](#what-you-can-use-docsie-for) · [Screenshots](#screenshots) ·
 [Availability](#which-parts-can-i-install-today) · [Install](#start-here) ·
 [License](#license-and-access) · [Roadmap](#roadmap)
+
+## Who it is for
+
+- Technical writers, product and engineering teams maintaining manuals and specifications.
+- Support, knowledge-management and enablement teams serving employees and customers.
+- Course creators, educators, consultants and training businesses building learning products.
+- Developers, DevOps teams and enterprise IT running knowledge workflows on their own infrastructure.
+- Individual self-hosters and homelab users; personal non-commercial use is free for one active application user.
 
 ## What you can use Docsie for
 
@@ -52,13 +62,23 @@ in several languages without treating every copy as an unrelated document.
 
 ### Import, consolidate and maintain existing knowledge
 
-Bring existing PDFs, Word documents, Markdown and Confluence content into an
-editable knowledge base. Use AI-assisted writing and rewriting to organize raw
+Bring existing PDFs, Word documents, Markdown, presentations, images, websites
+and Confluence content into an editable knowledge base. Select the appropriate
+importers, converters and OCR or vision services for each source format. Use AI-assisted writing and rewriting to organize raw
 material into articles, manuals and procedures. Preserve the source material for
 review and update the resulting documentation as requirements change.
 
 **Example:** consolidate a folder of legacy manuals into structured product
 documentation that your team can maintain and publish.
+
+### Improve documentation using your existing knowledge
+
+Use related manuals, articles and source material to expand an incomplete guide,
+clarify a procedure or improve an answer. Review the proposed additions against
+their sources before updating maintained documentation.
+
+**Example:** enrich an installation guide with troubleshooting information from
+support articles, then reuse the approved guide in onboarding and training.
 
 ### Video-to-docs and operational knowledge capture
 
@@ -82,10 +102,14 @@ product documentation, then improve the article that was missing an explanation.
 
 ### Content comparison, technical research and change analysis
 
-Compare documents, videos and website-derived material. Investigate differences
-between versions or compare different products, specifications and procedures.
-Use structured findings and source references to explore the evidence and save
-comparison results as documentation.
+Compare technical documentation sets, product manuals, specifications, datasheets,
+images, videos and website-derived material. Investigate differences between
+versions, products and procedures, including gaps, missing information and
+conflicting content. Use structured findings and source references to review the
+evidence and save comparison results as documentation. For large collections,
+validate source coverage, processing capacity and the selected models with
+representative inputs; this preview does not establish a document-size limit or
+throughput guarantee.
 
 **Example:** compare two vendors' technical manuals against the requirements your
 engineering team cares about, or inspect how a recorded workflow changed between
@@ -102,6 +126,27 @@ selected application build.
 
 **Example:** turn your operating procedures into employee onboarding with ordered
 lessons and knowledge checks, or deliver product training to customers and partners.
+
+### Paid courses and learning products
+
+Creators, educators, consultants and training businesses can turn videos and
+documents into structured courses and sell learner access through connected
+commerce/payment workflows. Docsie connects purchase entitlements to course or
+portal access; the chosen payment service and its integration need configuration.
+Commercial use requires the appropriate Docsie license.
+
+**Example:** turn a workshop recording and its reference manual into a paid course,
+then grant buyers access to the lessons and assessments. Verify purchase, learner
+access and access revocation with the selected integration before launch.
+
+### Presentations and training decks
+
+Generate PowerPoint presentations and training decks from existing knowledge.
+Reuse approved documentation to prepare product briefings, onboarding slides and
+training material, then review the exported deck before sharing it.
+
+**Example:** turn a maintained product guide into a customer training deck, keeping
+its explanations aligned with the documentation used by the support team.
 
 ### Forms, quizzes, surveys and assessments
 
@@ -133,7 +178,18 @@ knowledge and participate in content-generation and publishing workflows.
 manuals, or connect an AI client to your documentation through an authenticated
 self-hosted endpoint.
 
-### Narration, voice agents and presentations
+### Offline and air-gapped reader delivery
+
+Build self-contained documentation-reader packages for environments where readers
+cannot reach the hosted portal. Ship product documentation with a software release
+or make a knowledge portal available on a disconnected network. Verify the built
+package, assets and offline search in the intended environment.
+
+**Example:** deliver a manual alongside an application installed at a restricted
+site. Reader delivery has its own build/runtime requirements; a complete offline
+installer for the Docsie authoring platform is not released in this repository.
+
+### Narration and voice agents
 
 Generate speech from text with Chatterbox or hosted TTS providers. Voice-agent
 and presentation integrations extend this into interactive spoken experiences;
@@ -183,8 +239,12 @@ is not automatically included or verified in the published image/chart release.
 | Local or hosted AI | Configuration procedures available; verify the selected models and organization routing |
 | Dokuta/video processing | Public AMD64/ARM64 UI, API and Celery images available; full workflow qualification and remaining platform dependencies still apply |
 | Local transcription | External Whisper-compatible endpoint supported; server/model bundle pending |
-| Local TTS and interactive voice | Public LiveKit worker image available; server/model packaging and deployment wiring still required; Dokuta voice APIs disabled by default |
+| Local TTS | Optional Chatterbox chart, native CPU installer and Dokuta wiring available; native CPU speech verified. Linux container and GPU inference remain unverified. See [speech setup](docs/TEXT_TO_SPEECH.md) |
+| Interactive voice | Public LiveKit worker image available; complete media-service/provider wiring and browser-call qualification still required |
 | Learn, Forms, multilingual workflows, comparison, policy review and automation | Application capabilities; verify image version, feature configuration and dependencies for the chosen workflow; no separately qualified public presets yet |
+| Paid learning content | Commerce/entitlement application integration; configure payment services and verify purchase, access and revocation. No qualified public commerce preset yet |
+| PowerPoint generation and knowledge enrichment | Application workflows; verify image support, processors, models and saved output. No separately qualified public presets yet |
+| Offline reader delivery | Application build workflow; verify the exported reader in a disconnected environment. Separate from the unreleased full-platform offline bundle |
 | Meeting capture and external integrations | Require their own services, credentials and network access; not bundled by the baseline chart |
 | AWS one-click and complete offline bundle | Not released |
 
