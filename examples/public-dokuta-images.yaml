@@ -1,0 +1,13 @@
+# Dokuta images only; merge after your complete full-profile configuration.
+dokuta-onprem:
+  image:
+    repository: docsie/selfhosted-dokuta
+    tag: "0.3.0-preview.1@sha256:3ac9b74b29344ea0d90a2ca90b805c3edd35bf8f4779f7e2d9b0f0541ba88d8b"
+  fastapi:
+    image:
+      repository: docsie/selfhosted-dokuta-api
+      tag: "0.3.0-preview.1@sha256:dc3a6550118b8c27ac5722fa7ed4bbe30f7fcd5fcd35b0206a931d20b9f88d7f"
+dokuta-celery-onprem:
+  image:
+    repository: docsie/selfhosted-dokuta-celery
+    tag: "0.3.0-preview.1@sha256:6a7979275fe90300304398e5b0e3edaa450822976af9d443cb85157ca69b2256"

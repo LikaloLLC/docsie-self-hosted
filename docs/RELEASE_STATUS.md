@@ -1,5 +1,7 @@
 # Docsie Self-Hosted v0.2.0-preview.2
 
+Dokuta public images are now available for AMD64 and ARM64: see [public image references and overrides](PUBLIC_IMAGES.md). The complete platform image set remains a separate release milestone.
+
 First public Kubernetes chart preview for the proprietary Docsie application.
 
 ## Included

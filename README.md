@@ -1,5 +1,7 @@
 # Docsie Self-Hosted
 
+[Public Dokuta images (AMD64 + ARM64)](docs/PUBLIC_IMAGES.md) — UI, API, Celery and LiveKit preview images, with pull commands and Helm overrides.
+
 **Documentation · AI knowledge workflows · Training — on your infrastructure**
 
 [Website](https://www.docsie.io/) · [Install](#start-here) · [Documentation](docs/README.md) · [Agent setup](AGENTS.md) · [Releases](https://github.com/LikaloLLC/docsie-self-hosted/releases) · [Support](#support)
