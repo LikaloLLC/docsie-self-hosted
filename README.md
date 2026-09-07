@@ -1,18 +1,25 @@
 # Docsie Self-Hosted
 
+**Documentation · AI knowledge workflows · Training — on your infrastructure**
+
+[Website](https://www.docsie.io/) · [Install](#start-here) · [Documentation](docs/README.md) · [Agent setup](AGENTS.md) · [Releases](https://github.com/LikaloLLC/docsie-self-hosted/releases) · [Support](#support)
+
+[![Chart validation](https://github.com/LikaloLLC/docsie-self-hosted/actions/workflows/validate.yml/badge.svg)](https://github.com/LikaloLLC/docsie-self-hosted/actions/workflows/validate.yml)
+
 Docsie is a platform for creating, managing, translating and publishing knowledge,
 turning source material into documentation, comparing content, delivering training,
 and automating documentation workflows. Deploy the proprietary application on
 Kubernetes you control, with your choice of local or hosted AI services.
 
-**v0.2.0-preview.2 — Kubernetes deployment preview.** A clean local installation,
-automatic migrations, administrator login, worker health, MinIO storage and
-upgrade preservation have been tested. See [validation](docs/LOCAL_VALIDATION.md).
+![Docsie documentation assistant with source conversion, video comparison and research workflows](docs/assets/screenshots/documentation-assistant.png)
 
-This release contains charts and deployment tooling, **not application images**.
-Request compatible image access from Docsie before installing. Default satellite
-image tags are not yet a publicly downloadable image set. AI workflows have not
-been certified end to end with Ollama in this release.
+> **Kubernetes preview:** charts and deployment tooling are public; compatible
+> application images currently require [access from Docsie](https://www.docsie.io/demo/).
+> See [release status](docs/RELEASE_STATUS.md) for what is included and tested.
+
+**Explore:** [Use cases](#what-you-can-use-docsie-for) · [Screenshots](#screenshots) ·
+[Availability](#which-parts-can-i-install-today) · [Install](#start-here) ·
+[License](#license-and-access) · [Roadmap](#roadmap)
 
 ## What you can use Docsie for
 
@@ -135,6 +142,33 @@ the knowledge base and models.
 for a guided session. Audio-file generation and a live voice conversation have
 different deployment requirements.
 
+## Screenshots
+
+Explore the authoring workspace, published knowledge base and training dashboard.
+These product screenshots illustrate the application; consult the availability
+table below for the components included in the self-hosted preview.
+
+<details>
+<summary><strong>Docsie Learn — programs, learners, quizzes and certificates</strong></summary>
+
+![Docsie Learn training dashboard](docs/assets/screenshots/training-programs.png)
+
+</details>
+
+<details>
+<summary><strong>Workspace — organize content, assignments and publishing</strong></summary>
+
+![Docsie authoring workspace and task activity](docs/assets/screenshots/workspace.png)
+
+</details>
+
+<details>
+<summary><strong>Knowledge base — branded documentation and AI assistance</strong></summary>
+
+![Published Docsie knowledge base](docs/assets/screenshots/knowledge-base.png)
+
+</details>
+
 ## Which parts can I install today?
 
 The use cases above describe Docsie's application capabilities. This repository
@@ -243,3 +277,17 @@ The development chart includes Dokuta bootstrap and configuration repairs from
 a local full-stack rehearsal. See [full-stack validation](docs/FULL_STACK_VALIDATION.md)
 for what passed and the remaining image, audio and licensing gates. This work
 does not change the verification scope of the published release above.
+
+## Documentation
+
+Start at the [documentation index](docs/README.md) for installation, model
+configuration, use-case procedures, troubleshooting and validation reports.
+
+## Support
+
+- **Image access, licensing and deployment assistance:** [contact Docsie](https://www.docsie.io/demo/).
+- **Chart bugs or documentation fixes:** [open an issue](https://github.com/LikaloLLC/docsie-self-hosted/issues).
+  Include chart/image versions, Kubernetes version, architecture and redacted error output.
+- **Installation problems:** follow [troubleshooting](docs/TROUBLESHOOTING.md).
+
+For changes to this distribution, see [CONTRIBUTING.md](CONTRIBUTING.md).
