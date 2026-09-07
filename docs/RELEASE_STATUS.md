@@ -1,4 +1,4 @@
-# Docsie Self-Hosted v0.2.0-preview.1
+# Docsie Self-Hosted v0.2.0-preview.2
 
 First public Kubernetes chart preview for the proprietary Docsie application.
 
@@ -31,3 +31,8 @@ The preview application does not contain new offline license enforcement.
 AWS provisioning, offline bundles, full-platform acceptance, backup/restore and
 marketplace listing are not part of this release. Existing AWS scaffolding is
 experimental. Production ingress, TLS, email and model access need configuration.
+
+The initial `v0.2.0-preview.1` tag did not publish a release: an inherited AWS
+Terraform check failed before upload. This release separates chart publication
+from that unfinished AWS validation. Chart versions are unchanged because the
+chart contents are unchanged.

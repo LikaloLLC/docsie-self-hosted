@@ -9,7 +9,7 @@ mkdir -p dist
 helm dependency build charts/docsie-platform --skip-refresh
 helm package charts/docsie --destination dist
 helm package charts/docsie-platform --destination dist
-helm repo index dist --url https://github.com/LikaloLLC/docsie-self-hosted/releases/download/v0.2.0-preview.1
+helm repo index dist --url https://github.com/LikaloLLC/docsie-self-hosted/releases/download/v0.2.0-preview.2
 python3 - <<'PY'
 import hashlib
 from pathlib import Path

@@ -2,7 +2,7 @@
 
 Deploy the proprietary Docsie application on Kubernetes you control.
 
-**v0.2.0-preview.1 — Kubernetes deployment preview.** A clean local installation,
+**v0.2.0-preview.2 — Kubernetes deployment preview.** A clean local installation,
 automatic migrations, administrator login, worker health, MinIO storage and
 upgrade preservation have been tested. See [validation](docs/LOCAL_VALIDATION.md).
 
@@ -22,7 +22,7 @@ been certified end to end with Ollama in this release.
 ```bash
 git clone https://github.com/LikaloLLC/docsie-self-hosted.git
 cd docsie-self-hosted
-git checkout v0.2.0-preview.1
+git checkout v0.2.0-preview.2
 # Configure image access, hostname, TLS, storage and an administrator first.
 bash scripts/install-kubernetes.sh /path/to/kubeconfig docsie /path/to/values.yaml
 ```
