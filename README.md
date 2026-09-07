@@ -250,27 +250,28 @@ installation workflow, configuration choices and verification steps.
 ```bash
 git clone https://github.com/LikaloLLC/docsie-self-hosted.git
 cd docsie-self-hosted
-git checkout v0.2.0-preview.2
+git checkout v0.2.0-preview.4
 # Configure image access, hostname, TLS, storage and an administrator first.
 bash scripts/install-kubernetes.sh /path/to/kubeconfig docsie /path/to/values.yaml
 ```
 
-The baseline chart includes PostgreSQL, Redis, MinIO, Elasticsearch, web/worker
-processes and document/image converters. Target production architecture is Linux
+The baseline chart includes PostgreSQL, Redis, MinIO, Elasticsearch, App Search,
+web/worker processes and document/image converters. The source installer also
+provisions the packaged Elastic operator and runs an indexing/search check. Target production architecture is Linux
 x86_64; the documented Mac rehearsal uses emulation and locally prepared images.
 
 ## Downloads
 
 [Releases](https://github.com/LikaloLLC/docsie-self-hosted/releases) provide the
 application chart, platform chart, Helm repository index and SHA-256 checksums.
-The platform package bundles chart dependencies. Download and install its `.tgz`
-with your values file, or use the source installer above.
+The platform package bundles its application dependencies; the Elastic operator
+and CRDs are supplied as a separate `eck-operator-2.16.1.tgz` prerequisite. The
+source installer above handles that prerequisite automatically. For direct `.tgz`
+installation, follow [the search installation guide](docs/SEARCH.md) before
+installing `docsie-platform-0.2.0-preview.4.tgz`.
 
 ```bash
 sha256sum -c SHA256SUMS
-helm upgrade --install docsie ./docsie-platform-0.2.0-preview.1.tgz \
-  --kubeconfig /path/to/kubeconfig --namespace docsie --create-namespace \
-  -f /path/to/values.yaml --wait --timeout 20m
 ```
 
 ## License and access
