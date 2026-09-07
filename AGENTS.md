@@ -4,6 +4,16 @@ This repository distributes Helm charts and installation tooling for the
 proprietary Docsie application. Use these instructions when helping an operator
 install or upgrade Docsie. Run commands from the repository root.
 
+## Start with the use case
+
+When an operator asks to install Docsie, begin with the outcome they describe.
+Use [the use-case overview](docs/USE_CASES.md) and
+[installation procedures](docs/INSTALL_BY_USE_CASE.md) to select dependencies.
+Combine multiple requested use cases in one installation. Do not ask operators
+to choose chart profiles before explaining which services their use case needs.
+Follow the procedure through configuration, installation and outcome verification;
+report unbundled components explicitly rather than inventing installation flags.
+
 ## Read first
 
 - [Release status](docs/RELEASE_STATUS.md): released capabilities and image access.

@@ -1,5 +1,10 @@
 # Docsie Self-Hosted
 
+Create, organize and publish your team's knowledge on infrastructure you control.
+Docsie supports knowledge bases, AI-assisted documentation, video-to-docs and
+source comparison. Speech and voice-agent integrations are also part of the
+application; their self-hosted packaging is still in progress.
+
 Deploy the proprietary Docsie application on Kubernetes you control.
 
 **v0.2.0-preview.2 — Kubernetes deployment preview.** A clean local installation,
@@ -10,6 +15,18 @@ This release contains charts and deployment tooling, **not application images**.
 Request compatible image access from Docsie before installing. Default satellite
 image tags are not yet a publicly downloadable image set. AI workflows have not
 been certified end to end with Ollama in this release.
+
+## Choose what you want to do
+
+- Maintain internal procedures, onboarding guides or a customer help center.
+- Write documentation and answer questions with AI over your knowledge base.
+- Turn recorded walkthroughs into guides with Dokuta.
+- Review differences between versions of source material.
+- Generate narration or run voice agents as their deployment components become available.
+
+Read [use cases and availability](docs/USE_CASES.md), then follow
+[installation by use case](docs/INSTALL_BY_USE_CASE.md). Tell your installation
+agent the outcome you want; it can select the required services and configuration.
 
 ## Start here
 
