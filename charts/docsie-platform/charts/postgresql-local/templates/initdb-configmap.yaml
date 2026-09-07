@@ -1,0 +1,20 @@
+{{- $name := .Values.fullnameOverride | default "postgresql" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-initdb
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  # Runs only on first init of an empty data volume. POSTGRES_DB already
+  # creates the first database; create the rest here.
+  10-create-databases.sh: |
+    #!/bin/sh
+    set -eu
+    {{- range $db := rest .Values.databases }}
+    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+      -tc "SELECT 1 FROM pg_database WHERE datname = '{{ $db }}'" | grep -q 1 || \
+      psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+        -c "CREATE DATABASE {{ $db }} OWNER \"$POSTGRES_USER\""
+    {{- end }}

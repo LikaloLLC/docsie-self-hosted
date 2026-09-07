@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+!terraform.tfvars.example
+*.pem
+*.key
+license.json
+.env*
+installers/aws/generated/
+dist/
+*.tgz

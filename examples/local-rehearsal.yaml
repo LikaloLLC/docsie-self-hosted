@@ -1,0 +1,139 @@
+# Isolated Docker/k3s rehearsal; never a production sizing recommendation.
+global:
+  hostname: localhost
+  scheme: http
+docsie:
+  image:
+    repository: docsie/docsie-server
+    tag: helm-local-single
+    digest: ''
+    pullPolicy: Never
+  ingress:
+    enabled: false
+  plainEnv:
+    DOCSIE_USE_S3_STORAGE: 'true'
+    DJANGO_AWS_STORAGE_BUCKET_NAME: docsie-media
+    DJANGO_AWS_UPLOAD_BUCKET_NAME: docsie-upload
+    DJANGO_AWS_IMAGE_CONVERTER_BUCKET_NAME: docsie-image-converter
+    DJANGO_AWS_TEMP_BUCKET_NAME: docsie-temp
+    DJANGO_AWS_FEEDBACK_BUCKET_NAME: docsie-feedback
+    DJANGO_AWS_PORTAL_BUCKET_NAME: docsie-portals
+    DOCSIE_CDN_BUCKET_NAME: docsie-cdn
+    DJANGO_AWS_S3_REGION_NAME: us-east-1
+    DJANGO_AWS_S3_ADDRESSING_STYLE: path
+    DJANGO_AWS_S3_SIGNATURE_VERSION: s3v4
+    PRESIGNED_UPLOAD_USE_ACL: 'false'
+    DJANGO_AWS_S3_PUBLIC_ENDPOINT_URL: http://127.0.0.1:59000
+    MINIO_PUBLIC_ENDPOINT_URL: http://127.0.0.1:59000
+    APP_BASE_URL: http://127.0.0.1:58081
+    BASE_URL: http://127.0.0.1:58081
+    DOCSIE_BASE_URL: http://127.0.0.1:58081
+    CSRF_TRUSTED_ORIGINS: http://127.0.0.1:58081
+    DJANGO_DEBUG: 'false'
+    DJANGO_EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+    DOCSIE_LICENSE_ENFORCEMENT: 'false'
+  web:
+    command:
+    - gunicorn
+    - config.wsgi:application
+    - --bind
+    - 0.0.0.0:80
+    - --workers
+    - '1'
+    - --threads
+    - '2'
+    - --timeout
+    - '120'
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: '2'
+        memory: 1536Mi
+  celery:
+    replicaCount: 1
+    command:
+    - celery
+    - -A
+    - docsie.taskapp
+    - worker
+    - -l
+    - info
+    - -Q
+    - celery,background,server_side_render_queue,rewrite
+    - --concurrency=1
+    - --pool=solo
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: '2'
+        memory: 1536Mi
+  celeryBackground:
+    enabled: false
+  celerySsr:
+    enabled: false
+  celeryRewrite:
+    enabled: false
+  celeryBeat:
+    enabled: false
+image-processor:
+  image:
+    tag: helm-local
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: '1'
+      memory: 512Mi
+pdf-converter:
+  image:
+    tag: helm-local
+    pullPolicy: Never
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: '1'
+      memory: 768Mi
+elasticsearch-onprem:
+  heapSize: 256m
+  resources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      cpu: '1'
+      memory: 768Mi
+postgresql-local:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: '1'
+      memory: 512Mi
+redis-local:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: '1'
+      memory: 256Mi
+minio-onprem:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: '1'
+      memory: 512Mi
+bootstrap:
+  enabled: true
+  adminEmail: helm-admin@example.test

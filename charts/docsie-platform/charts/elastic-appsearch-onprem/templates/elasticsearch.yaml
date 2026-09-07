@@ -1,0 +1,41 @@
+{{- if .Values.elasticsearch.enabled }}
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+spec:
+  version: {{ .Values.elasticsearch.version | quote }}
+  http:
+    service:
+      spec:
+        type: ClusterIP
+  nodeSets:
+    - name: default
+      count: {{ .Values.elasticsearch.count }}
+      config:
+        node.roles: [ master, data, ingest, transform ]
+        # ECK defaults http.publish_host to a short pod DNS name. On the
+        # single-node k3s/on-prem install that name can resolve as NXDOMAIN
+        # during bootstrap, so publish HTTP on the pod IP just like transport.
+        http.publish_host: ${POD_IP}
+      podTemplate:
+        spec:
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: [ "sh", "-c", "sysctl -w vm.max_map_count=262144" ]
+          containers:
+            - name: elasticsearch
+              resources:
+                {{- toYaml .Values.elasticsearch.resources | nindent 16 }}
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: [ ReadWriteOnce ]
+            resources:
+              requests:
+                storage: {{ .Values.elasticsearch.storage }}
+{{- end }}

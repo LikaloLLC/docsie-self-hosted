@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cad-adapter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Files.Get "files/server.py" | sha256sum }}
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      enableServiceLinks: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: cad-adapter
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -lc
+            - |
+              set -euo pipefail
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y --no-install-recommends ca-certificates curl python3 python3-pip python3-setuptools python3-wheel
+              if [ "${CAD_ADAPTER_INSTALL_FREECAD:-false}" = "true" ]; then
+                apt-get install -y --no-install-recommends freecad
+              fi
+              rm -rf /var/lib/apt/lists/*
+              python3 -m pip install --no-cache-dir fastapi uvicorn requests python-multipart rhino3dm trimesh numpy pillow
+              export PYTHONPATH="/usr/lib/freecad/lib:/usr/lib/freecad-python3/lib:${PYTHONPATH:-}"
+              python3 /app/config/server.py
+          ports:
+            - containerPort: {{ .Values.env.CAD_ADAPTER_PORT | int }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.env }}
+            {{- if ne $key "CAD_ADAPTER_ALLOWED_HOSTS" }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            - name: CAD_ADAPTER_ALLOWED_HOSTS
+              value: {{ include "cad-adapter.allowedHosts" . | quote }}
+            {{- range $key, $value := .Values.secretEnv }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cad-adapter.fullname" $ }}-secret
+                  key: {{ $key }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.env.CAD_ADAPTER_PORT | int }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 12
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.env.CAD_ADAPTER_PORT | int }}
+            periodSeconds: 10
+            failureThreshold: 120
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.env.CAD_ADAPTER_PORT | int }}
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "cad-adapter.fullname" . }}-config

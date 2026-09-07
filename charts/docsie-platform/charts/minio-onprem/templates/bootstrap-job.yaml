@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.fullnameOverride | default "minio" }}-bootstrap
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio-bootstrap
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      enableServiceLinks: false
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: "{{ include "minio.imagePrefix" . }}{{ .Values.clientImage.repository }}:{{ .Values.clientImage.tag }}"
+          imagePullPolicy: {{ .Values.clientImage.pullPolicy }}
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.authSecretName" . }}
+                  key: {{ .Values.auth.userKey }}
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.authSecretName" . }}
+                  key: {{ .Values.auth.passwordKey }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              until mc alias set local http://{{ .Values.fullnameOverride | default "minio" }}:{{ .Values.service.apiPort }} "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
+                sleep 2
+              done
+              {{- range .Values.buckets }}
+              mc mb --ignore-existing "local/{{ . }}"
+              {{- end }}
+              {{- range .Values.publicReadBuckets }}
+              mc anonymous set download "local/{{ . }}"
+              {{- end }}

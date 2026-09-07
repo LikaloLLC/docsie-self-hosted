@@ -1,0 +1,30 @@
+{{- if .Values.enterpriseSearch.enabled }}
+apiVersion: enterprisesearch.k8s.elastic.co/v1
+kind: EnterpriseSearch
+metadata:
+  name: {{ .Values.enterpriseSearch.name }}
+spec:
+  version: {{ .Values.enterpriseSearch.version | quote }}
+  count: {{ .Values.enterpriseSearch.count }}
+  elasticsearchRef:
+    name: {{ .Values.elasticsearch.name }}
+  config:
+    ent_search.external_url: {{ .Values.enterpriseSearch.externalUrl | default (printf "https://%s-ent-http:3002" .Values.enterpriseSearch.name) | quote }}
+    kibana.host: https://localhost:5601/
+    app_search.engine.document_size.limit: {{ .Values.enterpriseSearch.documentSizeLimit | quote }}
+    app_search.engine.source_engines_per_meta_engine.limit: {{ .Values.enterpriseSearch.sourceEnginesPerMetaEngineLimit }}
+  http:
+    service:
+      spec:
+        type: ClusterIP
+  podTemplate:
+    spec:
+      containers:
+        - name: enterprise-search
+          env:
+            - name: JAVA_OPTS
+              value: {{ .Values.enterpriseSearch.javaOpts | quote }}
+          resources:
+            {{- toYaml .Values.enterpriseSearch.resources | nindent 12 }}
+{{- end }}
+

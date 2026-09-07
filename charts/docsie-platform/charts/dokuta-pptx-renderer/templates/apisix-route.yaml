@@ -1,0 +1,30 @@
+{{- if .Values.apisixRoute.enabled }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ include "dokuta-pptx-renderer.fullname" . }}
+  labels:
+    {{- include "dokuta-pptx-renderer.labels" . | nindent 4 }}
+spec:
+  http:
+    - name: {{ include "dokuta-pptx-renderer.fullname" . }}
+      match:
+        hosts:
+          - {{ .Values.apisixRoute.host | quote }}
+        paths:
+          {{- range .Values.apisixRoute.paths }}
+          - {{ . | quote }}
+          {{- end }}
+      backends:
+        - serviceName: {{ include "dokuta-pptx-renderer.fullname" . }}
+          servicePort: {{ .Values.service.port }}
+      plugins:
+        - name: cors
+          enable: true
+          config:
+            allow_origins: {{ .Values.cors.allowOrigins | default (printf "https://%s" ((.Values.global | default dict).hostname | default "docsie.example.com")) | quote }}
+            allow_methods: "GET,POST,OPTIONS"
+            allow_headers: "Authorization,Content-Type"
+            expose_headers: "Content-Disposition,X-Dokuta-Pptx-Cache"
+            max_age: 3600
+{{- end }}

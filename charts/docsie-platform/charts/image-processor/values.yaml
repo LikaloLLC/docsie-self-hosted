@@ -1,0 +1,61 @@
+# Vendored from external/docsie-helm-charts/onprem/image-processor for docsie-platform.
+# Normalizations: namespace-qualified MinIO DNS -> same-namespace `minio` service;
+# S3 credentials come from the shared generated platform secret; customer-prefixed
+# image tag replaced with a neutral release tag.
+fullnameOverride: image-processor
+
+replicaCount: 1
+
+image:
+  repository: docsie/image-processor
+  # TODO(onprem-bundle): build/retag multi-arch (amd64+arm64) as
+  # docsie/image-processor:onprem-0.1.0 — the previous tag was ARM64-only and
+  # carried a customer prefix.
+  tag: onprem-0.1.0
+  pullPolicy: IfNotPresent
+
+# Airgapped installs import images into containerd; no pull secret by default.
+# global.imagePullSecret is appended automatically when set.
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  # Same-namespace MinIO service (docsie-platform installs into one namespace).
+  S3_ENDPOINT_URL: http://minio:9000
+  S3_REGION: us-east-1
+  SOURCE_BUCKET: docsie-image-converter
+  SLS_IGNORE: favicon.ico
+  SLS_VALID_PATH_REGEX: .*
+  MAX_IMAGE_WIDTH: "3072"
+  MAX_IMAGE_HEIGHT: "3072"
+  DEFAULT_QUALITY: "78"
+  DEFAULT_COMPRESS_QUALITY: "78"
+  PNGQUANT_SPEED: "10"
+  DEFAULT_CACHE_CONTROL: max-age=2592000
+  SECURITY_KEY: ""
+  CUSTOM_DOMAIN: ""
+
+# Sensitive environment variables sourced from Kubernetes Secrets.
+# Keys present here take precedence over duplicate keys in `env`.
+secretEnv:
+  S3_ACCESS:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_USER
+  S3_SECRET:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_PASSWORD
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

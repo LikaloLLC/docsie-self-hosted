@@ -1,0 +1,58 @@
+# Vendored from setup/helm/cad-adapter for docsie-platform. OPTIONAL component
+# (enable with cadAdapter.enabled=true at the platform level).
+#
+# TODO(onprem-bundle) AIRGAP-HOSTILE: this chart apt-get/pip-installs its whole
+# runtime (FreeCAD, rhino3dm, fastapi, ...) at pod start on ubuntu:22.04 —
+# dead on arrival without egress. Build a real image
+# (docsie/cad-adapter:onprem-<version>) and drop the runtime install. Tracked
+# as a separate work item in ONPREM_INSTALLER_DESIGN.md §3.3 rule 5.
+#
+# Normalizations: SaaS hostnames removed from the download allowlist and CORS
+# defaults (allowlist derives from in-cluster MinIO + global.hostname when
+# empty); resource names de-collided via fullname helper.
+replicaCount: 1
+
+image:
+  repository: ubuntu
+  tag: "22.04"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 5003
+
+env:
+  CAD_ADAPTER_HOST: "0.0.0.0"
+  CAD_ADAPTER_PORT: "5003"
+  CAD_ADAPTER_LOG_LEVEL: "INFO"
+  CAD_ADAPTER_MAX_DOWNLOAD_MB: "250"
+  # Empty = "minio,<global.hostname>" (in-cluster object store + this install).
+  CAD_ADAPTER_ALLOWED_HOSTS: ""
+  CAD_ADAPTER_INSTALL_FREECAD: "true"
+  CAD_ADAPTER_REQUEST_TIMEOUT: "120"
+
+secretEnv: {}
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 3000m
+    memory: 6Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+apisixRoute:
+  enabled: false
+  host: cad-adapter.example.com
+  paths:
+    - /*
+
+cors:
+  # Set to https://<global.hostname> for browser-facing use; internal-only by default.
+  allowOrigins: "https://docsie.example.com"

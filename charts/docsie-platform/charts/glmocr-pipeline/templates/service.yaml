@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "glmocr-pipeline.fullname" . }}
+  labels:
+    app: {{ include "glmocr-pipeline.fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.env.GLMOCR_PORT | int }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ include "glmocr-pipeline.fullname" . }}

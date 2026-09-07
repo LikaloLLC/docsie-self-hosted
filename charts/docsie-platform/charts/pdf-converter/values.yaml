@@ -1,0 +1,52 @@
+# Vendored from external/docsie-helm-charts/onprem/pdf-converter for docsie-platform.
+# Normalizations: namespace-qualified MinIO DNS -> same-namespace `minio` service;
+# plaintext minioadmin defaults removed (shared generated platform secret);
+# customer-prefixed image tag replaced with a neutral release tag.
+fullnameOverride: pdf-converter
+
+replicaCount: 1
+
+image:
+  repository: docsie/pdf-converter
+  # TODO(onprem-bundle): build/retag multi-arch (amd64+arm64) as
+  # docsie/pdf-converter:onprem-0.1.0 — the previous tag was ARM64-only and
+  # carried a customer prefix.
+  tag: onprem-0.1.0
+  pullPolicy: IfNotPresent
+
+# Airgapped installs import images into containerd; no pull secret by default.
+# global.imagePullSecret is appended automatically when set.
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  # Same-namespace MinIO service (docsie-platform installs into one namespace).
+  S3_ENDPOINT_URL: http://minio:9000
+  S3_REGION: us-east-1
+  CONVERSION_TIMEOUT_SECONDS: "240"
+  PRESIGNED_URL_EXPIRATION_SECONDS: "900"
+
+# Sensitive environment variables sourced from Kubernetes Secrets.
+# Keys present here take precedence over duplicate keys in `env`.
+secretEnv:
+  S3_ACCESS:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_USER
+  S3_SECRET:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_PASSWORD
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 3Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

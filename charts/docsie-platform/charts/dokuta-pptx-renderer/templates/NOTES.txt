@@ -1,0 +1,7 @@
+Dokuta PPTX renderer is deployed.
+
+Health:
+  https://{{ .Values.apisixRoute.host }}/health
+
+Internal service:
+  {{ include "dokuta-pptx-renderer.fullname" . }}:{{ .Values.service.port }}

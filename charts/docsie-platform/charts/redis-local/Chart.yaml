@@ -1,0 +1,9 @@
+apiVersion: v2
+name: redis-local
+description: >-
+  Minimal single-node Redis for Docsie on-prem installs, built on the official
+  redis image (NOT Bitnami, per the installer strategy decision). Password comes
+  from the platform-generated secret; upgrades never rotate it.
+type: application
+version: 0.1.0
+appVersion: "7"

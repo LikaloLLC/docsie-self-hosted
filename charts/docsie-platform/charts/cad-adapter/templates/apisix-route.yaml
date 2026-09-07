@@ -1,0 +1,30 @@
+{{- if .Values.apisixRoute.enabled }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: {{ include "cad-adapter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  http:
+    - name: {{ include "cad-adapter.fullname" . }}-http
+      match:
+        hosts:
+          - {{ .Values.apisixRoute.host }}
+        paths:
+          {{- range .Values.apisixRoute.paths }}
+          - {{ . }}
+          {{- end }}
+      backends:
+        - serviceName: {{ include "cad-adapter.fullname" . }}
+          servicePort: {{ .Values.service.port }}
+      plugins:
+        - name: cors
+          enable: true
+          config:
+            allow_origins: {{ .Values.cors.allowOrigins | quote }}
+            allow_methods: "GET,POST,OPTIONS"
+            allow_headers: "Authorization,Content-Type"
+            max_age: 3600
+{{- end }}

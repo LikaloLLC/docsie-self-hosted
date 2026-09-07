@@ -1,0 +1,36 @@
+# Single-node Redis on the official image. Not exposed outside the cluster.
+# Fixed same-namespace service name; other components reference "redis".
+fullnameOverride: redis
+
+image:
+  repository: redis
+  # Official image, per the installer strategy decision. Digest-pin at bundle build.
+  tag: 7-alpine
+  pullPolicy: IfNotPresent
+
+auth:
+  # The password ALWAYS comes from a Kubernetes Secret — no credential value
+  # ships in this chart.
+  existingSecret: docsie-platform-secrets
+  passwordKey: REDIS_PASSWORD
+
+service:
+  port: 6379
+
+persistence:
+  enabled: true
+  # Empty = fall back to global.storageClass, then the cluster default.
+  storageClassName: ""
+  size: 8Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

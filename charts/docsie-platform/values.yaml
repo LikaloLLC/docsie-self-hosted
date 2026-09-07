@@ -1,0 +1,181 @@
+# docsie-platform — single values surface for the on-prem / airgapped install.
+#
+# Design rules (docs/ONPREM_INSTALLER_DESIGN.md §3.3):
+#   - one namespace per install; all in-cluster references are bare service
+#     names (postgresql, redis, minio, elasticsearch, chromadb, docsie-web,
+#     dokuta-fastapi, collaboration-relay, whisper-openai-adapter, ...)
+#   - no credential value appears anywhere in values; secrets are generated
+#     once at install (templates/secrets.yaml, lookup-guarded)
+#   - every hostname/endpoint is driven from `global`
+
+bootstrap:
+  enabled: false
+  adminEmail: ""
+
+migrations:
+  enabled: true
+  timeoutSeconds: 1200
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1536Mi
+
+storage:
+  mode: local
+  postgresql:
+    enabled: true
+  redis:
+    enabled: true
+  minio:
+    enabled: true
+
+global:
+  selfHosted: true
+  scheme: https
+  # Public hostname of this install (portal + app). Subcharts derive their own
+  # hosts from it (dokuta.<hostname>, pptx.<hostname>).
+  hostname: docsie.example.com
+  tls:
+    # none  - plain HTTP / TLS handled outside the cluster
+    # secret - customer-provided cert in an existing TLS secret (secretName)
+    mode: none
+    secretName: ""
+  # OpenAI-compatible endpoint of the local model host (Ollama/vLLM),
+  # e.g. http://192.0.2.10:11434/v1. Consumed by Dokuta (LLM_BASE_URL),
+  # glmocr-pipeline, and the kb-ai chat wiring.
+  modelEndpoint: ""
+  # OpenAI-compatible transcription endpoint. Empty = in-cluster adapter
+  # (http://whisper-openai-adapter:8080/v1).
+  whisperEndpoint: ""
+  # Empty = cluster default StorageClass (k3s: local-path).
+  storageClass: ""
+  # Optional registry mirror prefix for EVERY image, e.g. "registry.local:5000".
+  imageRegistry: ""
+  # Optional name of an existing pull secret appended to every workload.
+  # Airgapped installs import images into containerd and leave this empty.
+  imagePullSecret: ""
+  # Consumed by the docsie subchart: on-prem always uses manual/generated
+  # secrets, never Doppler.
+  secretProvider: manual
+  # Overrides the docsie subchart's default (docker-hub pull secret) — images
+  # are imported from the bundle.
+  imagePullSecrets: []
+
+# Profiles are cumulative: kb-ai keeps kb enabled; full keeps kb + kbAi
+# enabled. install.sh sets these flags accordingly (--profile kb|kb-ai|full).
+profiles:
+  kb: true
+  kbAi: false
+  full: false
+
+# CAD adapter is optional even in the full profile.
+cadAdapter:
+  enabled: false
+
+# Explicit secret values override generation in templates/secrets.yaml
+# (e.g. to import credentials from an existing install). Normally left empty.
+secrets: {}
+  # POSTGRES_PASSWORD: ""
+  # REDIS_PASSWORD: ""
+  # MINIO_ROOT_USER: ""
+  # MINIO_ROOT_PASSWORD: ""
+  # DJANGO_SECRET_KEY: ""
+  # FIELD_ENCRYPTION_KEY: ""
+
+# ---------------------------------------------------------------------------
+# docsie app chart (file://../docsie). The chart's own manual-secret seam is
+# used: platform-generated secrets are attached via envFrom, and non-secret
+# in-cluster endpoints via plainEnv.
+# ---------------------------------------------------------------------------
+docsie:
+  startupDependencies:
+    enabled: true
+  image:
+    tag: onprem-0.1.0-amd64
+    digest: sha256:1c143cd251d91f508faa1f74cadd69c1e8cef96ed4384916acbc3a830d79c5fb
+    pullPolicy: IfNotPresent
+  manualSecret:
+    # envFrom source for every Docsie workload: DJANGO_SECRET_KEY,
+    # FIELD_ENCRYPTION_KEY, POSTGRES_PASSWORD, REDIS_PASSWORD, MINIO_ROOT_*.
+    name: docsie-platform-secrets
+    generate:
+      # The umbrella chart generates the app crypto keys itself.
+      enabled: false
+  workload:
+    extraEnvFrom:
+      # DATABASE_URL, REDIS_URL, CELERY_BROKER_URL, CELERY_RESULT_BACKEND,
+      # AWS/DJANGO_AWS S3 credentials — derived by templates/secrets.yaml.
+      - secretRef:
+          name: docsie-platform-derived
+  plainEnv:
+    # Same-namespace service endpoints (single-namespace install).
+    ELASTICSEARCH_URL: http://elasticsearch:9200
+    REDIS_ENDPOINT: redis
+    REDIS_PORT: "6379"
+    DJANGO_DEBUG: "false"
+    DOCSIE_USE_S3_STORAGE: "true"
+    DJANGO_AWS_STORAGE_BUCKET_NAME: docsie-media
+    DJANGO_AWS_UPLOAD_BUCKET_NAME: docsie-upload
+    DJANGO_AWS_IMAGE_CONVERTER_BUCKET_NAME: docsie-image-converter
+    DJANGO_AWS_TEMP_BUCKET_NAME: docsie-temp
+    DJANGO_AWS_FEEDBACK_BUCKET_NAME: docsie-feedback
+    DJANGO_AWS_PORTAL_BUCKET_NAME: docsie-portals
+    DOCSIE_CDN_BUCKET_NAME: docsie-cdn
+    DJANGO_AWS_S3_REGION_NAME: us-east-1
+    DJANGO_AWS_S3_ADDRESSING_STYLE: path
+    DJANGO_AWS_S3_SIGNATURE_VERSION: s3v4
+    PRESIGNED_UPLOAD_USE_ACL: "false"
+    APP_CDN_BASE_URL: /static/appcdn2/
+    ENTERPRISE_STATIC_URL: /static/appcdn2/
+    DJANGO_AWS_S3_ENDPOINT_URL: http://minio:9000
+    IMAGE_PROCESSOR_URL: http://image-processor/
+    PDF_CONVERTER_SERVICE_URL: http://pdf-converter/convert
+    GLMOCR_PIPELINE_BASE_URL: http://glmocr-pipeline:5002
+    WHISPER_BASE_URL: http://whisper-openai-adapter:8080/v1
+    WEBSOCKET_RELAY_INTERNAL_URL: ws://collaboration-relay:8080/hub
+
+# ---------------------------------------------------------------------------
+# Subchart overrides. Service names are fixed via fullnameOverride so that the
+# static endpoint strings above stay valid for any release name.
+# ---------------------------------------------------------------------------
+postgresql-local:
+  fullnameOverride: postgresql
+
+redis-local:
+  fullnameOverride: redis
+
+minio-onprem:
+  fullnameOverride: minio
+
+elastic-appsearch-onprem: {}
+
+dokuta-onprem: {}
+
+dokuta-celery-onprem: {}
+
+chromadb:
+  fullnameOverride: chromadb
+
+whisper-openai-adapter:
+  fullnameOverride: whisper-openai-adapter
+
+glmocr-pipeline:
+  fullnameOverride: glmocr-pipeline
+
+cad-adapter:
+  fullnameOverride: cad-adapter
+
+collaboration-relay:
+  fullnameOverride: collaboration-relay
+
+dokuta-pptx-renderer:
+  fullnameOverride: dokuta-pptx-renderer
+
+image-processor:
+  fullnameOverride: image-processor
+
+pdf-converter:
+  fullnameOverride: pdf-converter

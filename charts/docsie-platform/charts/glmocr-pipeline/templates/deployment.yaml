@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "glmocr-pipeline.fullname" . }}
+  labels:
+    app: {{ include "glmocr-pipeline.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "glmocr-pipeline.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "glmocr-pipeline.fullname" . }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      enableServiceLinks: false
+      {{- with ((.Values.global | default dict).imagePullSecret) }}
+      imagePullSecrets:
+        - name: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: glmocr-pipeline
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              export GLMOCR_CONFIG_PATH=/app/config/config.yaml
+              cd /app
+              python /app/config/server.py
+          ports:
+            - containerPort: {{ .Values.env.GLMOCR_PORT | int }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.env }}
+            {{- if not (hasPrefix "GLMOCR_OCR_API_" $key) }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- include "glmocr-pipeline.backendEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: layout-models
+              mountPath: /app/layout_models
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.env.GLMOCR_PORT | int }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.env.GLMOCR_PORT | int }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "glmocr-pipeline.fullname" . }}-config
+        - name: layout-models
+          emptyDir: {}

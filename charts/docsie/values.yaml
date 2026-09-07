@@ -1,0 +1,344 @@
+# Default values for docsie enterprise chart
+
+global:
+  selfHosted: false
+  scheme: https
+  modelEndpoint: ""
+  # Secret management: "doppler" (cloud) or "manual" (on-prem with K8s secrets)
+  secretProvider: doppler
+  # Public hostname of this install. Ingress host entries left empty ("") fall
+  # back to this value. Placeholder — set per install (never a real customer
+  # hostname in chart defaults).
+  hostname: docsie.example.com
+  imagePullSecrets:
+    - name: docker-hub-repository-secret
+
+image:
+  repository: docsie/docsie-server
+  # Release bundles pin this tag to a specific onprem-<version> build; the
+  # floating "beta" default is for cloud/staging only (staging depends on it —
+  # do not change here).
+  tag: "beta"
+  digest: ""
+  pullPolicy: Always
+
+startupDependencies:
+  enabled: false
+  timeoutSeconds: 180
+
+# -- Doppler configuration (when global.secretProvider=doppler)
+doppler:
+  # Doppler service token secret name (must be pre-created)
+  tokenSecretName: doppler-token-docsie
+  project: docsie-prod
+  config: stg
+  resyncSeconds: 60
+  # Name of the K8s secret the operator will create/manage
+  managedSecretName: docsie-doppler-secret
+
+# -- Manual secrets (when global.secretProvider=manual, for on-prem)
+# `name` is an EXISTING secret created by the operator/customer — this chart
+# never ships credential values. See README.md for the list of required keys.
+manualSecret:
+  name: docsie-secret
+  # Optional first-install generation of app crypto keys (manual provider only).
+  # If the generated secret already exists, its values are reused (`lookup`
+  # guarded) so upgrades never rotate keys. The generated secret is added to
+  # every workload's envFrom in addition to `manualSecret.name`.
+  generate:
+    enabled: false
+    name: docsie-generated-secret
+    keys:
+      - DJANGO_SECRET_KEY
+      - FIELD_ENCRYPTION_KEY
+
+# -- Optional MongoDB CA mount (used when MONGO_URI includes tlsCAFile)
+mongo:
+  caSecretName: ""
+  caMountPath: /etc/docsie/mongo-ca
+  caFileKey: ca.crt
+  caFileName: ca.crt
+
+# -- Optional on-prem Django settings ConfigMap mount
+onpremSettings:
+  configMapName: ""
+  key: onprem.py
+  fileName: onprem.py
+  baseKey: ""
+  baseFileName: base.py
+
+# -- Shared pod additions for customer-specific endpoints, secrets, and mounts
+workload:
+  extraEnv: []
+  extraEnvFrom: []
+  extraVolumeMounts: []
+  extraVolumes: []
+
+# -- Non-secret environment applied to every Docsie workload (web, celery*, workers).
+# Map form: KEY: "value". Per-worker `workers.classes.<name>.plainEnv` overrides
+# chart-wide keys. Secrets never belong here — use manualSecret / `env` refs.
+plainEnv: {}
+
+# -- Secret-backed env refs applied to every Docsie workload.
+# Map form: KEY: { secretName: "...", key: "...", optional: false }
+env: {}
+
+# -- Web server (Django/Gunicorn)
+web:
+  enabled: true
+  replicaCount: 1
+  # Optional Deployment .spec.strategy override (e.g. {type: Recreate} or
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}}). Empty = k8s default.
+  strategy: {}
+  command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:80", "--workers", "4", "--threads", "4", "--worker-class", "gthread", "--timeout", "120", "--keep-alive", "5", "--max-requests", "1000", "--max-requests-jitter", "50", "--graceful-timeout", "30"]
+  port: 80
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Celery workers (generic queue only; rewrite queue runs on celeryRewrite)
+celery:
+  enabled: true
+  replicaCount: 2
+  # Optional Deployment .spec.strategy override (e.g. {type: Recreate} or
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}}). Empty = k8s default.
+  strategy: {}
+  command: ["celery", "-A", "docsie.taskapp", "worker", "-l", "info", "-Q", "celery", "--concurrency=4"]
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Celery background workers for RAG indexing and deferred usage tracking
+celeryBackground:
+  enabled: true
+  replicaCount: 1
+  # Optional Deployment .spec.strategy override (e.g. {type: Recreate} or
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}}). Empty = k8s default.
+  strategy: {}
+  command:
+    - celery
+    - -A
+    - docsie.taskapp.celery:app
+    - worker
+    - -l
+    - info
+    - -Q
+    - background
+    - --concurrency=2
+    - --prefetch-multiplier=1
+    - -O
+    - fair
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Celery SSR/search workers for rendering, indexing, and workflow sweeps
+celerySsr:
+  enabled: true
+  replicaCount: 1
+  # Optional Deployment .spec.strategy override (e.g. {type: Recreate} or
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}}). Empty = k8s default.
+  strategy: {}
+  command:
+    - celery
+    - -A
+    - docsie.taskapp.celery:app
+    - worker
+    - -l
+    - info
+    - -Q
+    - server_side_render_queue
+    - --concurrency=2
+    - --prefetch-multiplier=1
+    - -O
+    - fair
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Celery beat scheduler
+celeryBeat:
+  enabled: true
+  replicaCount: 1
+  command: ["celery", "-A", "docsie.taskapp", "beat", "-l", "info"]
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Celery rewrite workers (pool for long-running LLM rewrite/generation tasks)
+# Serves both enterprise_importer parallel chord sections and v3_1 portal/document provisioning.
+# Queue isolation only — pods schedule anywhere in the cluster (no dedicated nodes).
+# prefetch-multiplier=1 is critical: prevents a worker from reserving more than one long task at a time.
+celeryRewrite:
+  enabled: true
+  replicaCount: 3
+  # Optional Deployment .spec.strategy override (e.g. {type: Recreate} or
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}}). Empty = k8s default.
+  strategy: {}
+  command:
+    - celery
+    - -A
+    - docsie.taskapp
+    - worker
+    - -l
+    - info
+    - -Q
+    - rewrite
+    - --concurrency=4
+    - --prefetch-multiplier=1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4096Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    # host left empty falls back to global.hostname
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# -- ServiceAccount
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# -- Map-driven worker deployments (on-prem alternative to the celery*/beat
+# blocks above). Default-off: cloud installs keep the celery, celeryBackground,
+# celerySsr, celeryBeat, and celeryRewrite deployments. When enabling this,
+# disable those blocks so queues are not double-consumed.
+workers:
+  enabled: false
+  # Default Deployment .spec.strategy for all worker classes (per-class
+  # `strategy` overrides). Single-node installs typically want
+  # {rollingUpdate: {maxSurge: 0, maxUnavailable: 1}} or {type: Recreate}.
+  strategy: {}
+  # Long grace so in-flight celery tasks finish on shutdown (per-class
+  # `terminationGracePeriodSeconds` overrides).
+  terminationGracePeriodSeconds: 300
+  # Defaults applied to every class unless overridden per class.
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  # Map of workerName -> spec. Each entry supports: enabled, replicas, command,
+  # args, image {repository,tag,pullPolicy}, resources, strategy,
+  # terminationGracePeriodSeconds, plainEnv, env, extraEnv, envFrom,
+  # volumeMounts, volumes, nodeSelector, tolerations, affinity.
+  # See values.onprem-example.yaml for the five standard classes.
+  classes: {}
+
+# -- Optional nginx static/CDN proxy in front of MinIO (on-prem only).
+# Caches immutable CDN assets, bypasses cache for manager config.json, and can
+# pass large S3 uploads/downloads straight through (s3Proxy).
+staticProxy:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: nginx
+    tag: 1.27-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 80
+  pathPrefix: /docsie-cdn/
+  # In-cluster MinIO endpoint. Default assumes MinIO in the release namespace;
+  # set the full service DNS (e.g. http://minio.<namespace>.svc.cluster.local:9000)
+  # when MinIO lives elsewhere.
+  minioEndpoint: http://minio:9000
+  upstreamHost: minio:9000
+  cache:
+    keysZoneSize: 50m
+    maxSize: 2g
+    emptyDirSizeLimit: 2Gi
+    inactive: 7d
+    valid: 7d
+    notFoundValid: 1m
+  browserCache:
+    expires: 1y
+    cacheControl: public, max-age=31536000, immutable
+  configBrowserCache:
+    expires: -1
+    cacheControl: no-cache, max-age=0, must-revalidate
+  s3Proxy:
+    enabled: false
+    # e.g. [/docsie-media/, /docsie-upload/, /docsie-temp/, /docsie-portals/]
+    paths: []
+    clientMaxBodySize: 5g
+    clientBodyTimeout: 2h
+    proxyConnectTimeout: 60s
+    proxySendTimeout: 2h
+    proxyReadTimeout: 2h
+  gzip:
+    compLevel: 6
+    minLength: 1024
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Dedicated ingress for the proxy paths (rendered only when
+  # staticProxy.enabled is also true).
+  ingress:
+    enabled: true
+    className: ""
+    annotations: {}
+    hosts:
+      # host left empty falls back to global.hostname
+      - host: ""
+    tls: []

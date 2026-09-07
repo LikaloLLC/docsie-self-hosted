@@ -1,0 +1,58 @@
+# Vendored from setup/helm/glmocr-pipeline for docsie-platform.
+#
+# TODO(onprem-bundle) AIRGAP-HOSTILE: this chart runs its app from a ConfigMap
+# on the bare python:3.11-slim image (fastapi/pymupdf/uvicorn are NOT baked in)
+# — dead on arrival without egress or a prebuilt image. Build a real image
+# (docsie/glmocr-pipeline:onprem-<version>) and drop the ConfigMap-app pattern.
+# Tracked as a separate work item in ONPREM_INSTALLER_DESIGN.md §3.3 rule 5.
+#
+# Normalizations: OCR backend host/port/scheme derive from global.modelEndpoint
+# when GLMOCR_OCR_API_HOST is empty; resource names de-collided via fullname
+# helper.
+replicaCount: 1
+
+image:
+  repository: python
+  tag: "3.11-slim"
+  pullPolicy: IfNotPresent
+
+# All configurable via --set or env
+env:
+  # vLLM backend (GPU) — where the GLM-OCR model runs.
+  # Leave GLMOCR_OCR_API_HOST empty to derive host/port/scheme from
+  # global.modelEndpoint.
+  GLMOCR_OCR_API_HOST: ""
+  GLMOCR_OCR_API_PORT: "8000"
+  GLMOCR_OCR_API_SCHEME: "http"
+  GLMOCR_MODEL: "glm-ocr"
+  # Pipeline settings
+  GLMOCR_ENABLE_LAYOUT: "true"
+  GLMOCR_MAX_WORKERS: "16"
+  GLMOCR_OUTPUT_FORMAT: "both"
+  GLMOCR_LOG_LEVEL: "INFO"
+  # Server
+  GLMOCR_HOST: "0.0.0.0"
+  GLMOCR_PORT: "5002"
+  # Timeouts
+  GLMOCR_CONNECT_TIMEOUT: "300"
+  GLMOCR_REQUEST_TIMEOUT: "300"
+  # Page loader
+  GLMOCR_MAX_TOKENS: "16384"
+  GLMOCR_TEMPERATURE: "0.01"
+  GLMOCR_IMAGE_FORMAT: "JPEG"
+
+service:
+  type: ClusterIP
+  port: 5002
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

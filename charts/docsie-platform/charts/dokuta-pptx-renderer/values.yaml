@@ -1,0 +1,78 @@
+# Vendored from external/dokuta-pptx-renderer/helm/dokuta-pptx-renderer for
+# docsie-platform. Normalizations: floating `latest` tag -> neutral onprem
+# placeholder tag; APISIX route disabled in favor of a Traefik-compatible plain
+# Ingress; *.docsie.io/*.docsie.com hosts and CORS origins -> global.hostname
+# derived values / example.com placeholders; cert-manager annotation removed
+# (TLS is customer-provided via global.tls).
+replicaCount: 1
+
+image:
+  repository: docsie/dokuta-pptx-renderer
+  # TODO(onprem-bundle): placeholder — build/retag multi-arch as
+  # docsie/dokuta-pptx-renderer:onprem-0.1.0 (was floating `latest`).
+  tag: onprem-0.1.0
+  pullPolicy: IfNotPresent
+
+# Airgapped installs import images into containerd; no pull secret by default.
+# global.imagePullSecret is appended automatically when set.
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8787
+
+env:
+  HOST: "0.0.0.0"
+  PORT: "8787"
+  NODE_ENV: "production"
+  DOKUTA_PPTX_CACHE_DIR: "/app/.cache"
+  DOKUTA_PPTX_BODY_LIMIT_BYTES: "52428800"
+  # Empty = https://<global.hostname>,https://dokuta.<global.hostname>
+  DOKUTA_PPTX_CORS_ORIGINS: ""
+
+secretEnv: {}
+existingSecret: ""
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 3000m
+    memory: 6Gi
+
+persistence:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  size: 20Gi
+  # Empty = fall back to global.storageClass, then the cluster default.
+  storageClassName: ""
+
+# APISIX is a cloud-only assumption; on-prem tier 1 is the plain Ingress below
+# (Traefik, the k3s default). Leave this disabled unless the cluster runs APISIX.
+apisixRoute:
+  enabled: false
+  host: pptx.example.com
+  paths:
+    - /*
+
+cors:
+  # Empty = https://<global.hostname>,https://dokuta.<global.hostname>
+  allowOrigins: ""
+
+# Plain-Ingress path (Traefik-compatible). The service is normally internal-only
+# (Dokuta calls it in-cluster), so this stays disabled by default.
+ingress:
+  enabled: false
+  className: traefik
+  # Empty = pptx.<global.hostname>
+  host: ""
+  annotations: {}
+  # When global.tls.mode=secret and no tls entries are set here, a tls block
+  # using global.tls.secretName is added automatically.
+  tls: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

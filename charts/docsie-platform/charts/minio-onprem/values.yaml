@@ -1,0 +1,74 @@
+# Vendored from external/docsie-helm-charts/onprem/minio for docsie-platform.
+# Normalizations: floating `latest` tags pinned; plaintext minioadmin defaults
+# removed — credentials come from the shared generated platform secret.
+fullnameOverride: minio
+
+image:
+  repository: quay.io/minio/minio
+  # Pinned (was: latest). Re-resolve to a sha256 digest at bundle-build time.
+  tag: RELEASE.2025-04-22T22-12-26Z
+  pullPolicy: IfNotPresent
+
+clientImage:
+  repository: quay.io/minio/mc
+  # Pinned (was: latest). Re-resolve to a sha256 digest at bundle-build time.
+  tag: RELEASE.2025-04-16T18-13-26Z
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+auth:
+  # Consume credentials from the platform-generated secret (created by the
+  # docsie-platform umbrella chart, lookup-guarded so upgrades never rotate).
+  existingSecret: docsie-platform-secrets
+  userKey: MINIO_ROOT_USER
+  passwordKey: MINIO_ROOT_PASSWORD
+  # Only used when existingSecret is empty: the chart creates `secretName`
+  # from rootUser/rootPassword. No default credentials are shipped.
+  secretName: minio-secret
+  rootUser: ""
+  rootPassword: ""
+
+service:
+  type: ClusterIP
+  apiPort: 9000
+  consolePort: 9001
+  # Only applied when service.type=NodePort
+  apiNodePort: 30900
+  consoleNodePort: 30901
+
+cors:
+  allowOrigin: "*"
+
+persistence:
+  enabled: true
+  # Empty = fall back to global.storageClass, then the cluster default.
+  storageClassName: ""
+  size: 50Gi
+
+buckets:
+  - docsie-cdn
+  - docsie-media
+  - docsie-upload
+  - docsie-image-converter
+  - docsie-swagger
+  - docsie-temp
+  - docsie-feedback
+  - docsie-portals
+  - production
+  - media
+
+publicReadBuckets:
+  - docsie-cdn
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

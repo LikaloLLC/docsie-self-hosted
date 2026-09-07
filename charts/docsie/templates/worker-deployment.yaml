@@ -1,0 +1,95 @@
+{{/*
+Map-driven worker deployments (on-prem path). Gated off by default —
+cloud installs keep the dedicated celery-*-deployment.yaml templates.
+Pattern folded in from the docsie-onprem chart (worker classes driven by a
+values map) plus the production fork's fixes: per-class/chart-wide
+deployment strategy and terminationGracePeriodSeconds (default 300s so
+in-flight celery tasks can finish).
+*/}}
+{{- if .Values.workers.enabled }}
+{{- range $workerName, $worker := .Values.workers.classes }}
+{{- if $worker.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docsie-worker-{{ $workerName }}
+  labels:
+    {{- include "docsie.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/worker: {{ $workerName | quote }}
+spec:
+  replicas: {{ default 1 $worker.replicas }}
+  {{- with (default $.Values.workers.strategy $worker.strategy) }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "docsie.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: worker
+      app.kubernetes.io/worker: {{ $workerName | quote }}
+  template:
+    metadata:
+      annotations:
+        checksum/docsie-env: {{ toJson (dict "plainEnv" $.Values.plainEnv "env" $.Values.env "workerPlainEnv" $worker.plainEnv "workerEnv" $worker.env) | sha256sum }}
+      labels:
+        {{- include "docsie.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/worker: {{ $workerName | quote }}
+    spec:
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: {{ default (default 300 $.Values.workers.terminationGracePeriodSeconds) $worker.terminationGracePeriodSeconds }}
+      serviceAccountName: {{ include "docsie.serviceAccountName" $ }}
+      {{- with $.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- $workerImage := default (dict) $worker.image }}
+      {{- include "docsie.startupDependencies" $ | nindent 6 }}
+      containers:
+        - name: docsie-worker-{{ $workerName }}
+          image: "{{ default $.Values.image.repository $workerImage.repository }}:{{ default $.Values.image.tag $workerImage.tag }}"
+          imagePullPolicy: {{ default $.Values.image.pullPolicy $workerImage.pullPolicy }}
+          {{- with $worker.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $worker.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with include "docsie.workloadEnv" (dict "root" $ "component" $worker) }}
+          {{- . | nindent 10 }}
+          {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "docsie.secretName" $ }}
+            {{- if include "docsie.generatedSecretEnabled" $ }}
+            - secretRef:
+                name: {{ include "docsie.generatedSecretName" $ }}
+            {{- end }}
+            {{- with concat (default (list) $.Values.workload.extraEnvFrom) (default (list) $worker.envFrom) }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- include "docsie.workerVolumeMounts" (dict "root" $ "worker" $worker) | nindent 10 }}
+          {{- with (default $.Values.workers.resources $worker.resources) }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- include "docsie.workerVolumes" (dict "root" $ "worker" $worker) | nindent 6 }}
+      {{- with (default $.Values.workers.nodeSelector $worker.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (default $.Values.workers.tolerations $worker.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (default $.Values.workers.affinity $worker.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

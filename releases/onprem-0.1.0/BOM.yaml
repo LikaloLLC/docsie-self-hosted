@@ -1,0 +1,62 @@
+# Docsie On-Prem release onprem-0.1.0 — Bill of Materials
+# Pre-release. Image set = the customer-pilot-proven stack, retagged neutrally.
+# Charts: docsie 0.2.0, docsie-platform 0.1.0 (oci://registry-1.docker.io/docsiecharts)
+release: onprem-0.1.0
+date: "2026-08-30"
+charts:
+  - name: docsie-platform
+    version: 0.1.0
+    ref: oci://registry-1.docker.io/docsiecharts/docsie-platform
+  - name: docsie
+    version: 0.2.0
+    ref: oci://registry-1.docker.io/docsiecharts/docsie
+
+# First-party images (docker.io). Digest = index/manifest-list digest.
+images:
+  - ref: docsie/docsie-server:onprem-0.1.0
+    digest: sha256:0080d4ddba0173c5f855e02225b2493ce232d970e62c2e02f6806ba642c9d2c8
+    platforms: [linux/arm64]
+    note: pilot-proven build (2026-06-25 code state)
+  - ref: docsie/docsie-server:onprem-0.1.0-amd64
+    digest: sha256:1c143cd251d91f508faa1f74cadd69c1e8cef96ed4384916acbc3a830d79c5fb
+    platforms: [linux/amd64]
+    note: >-
+      pinned from the current cloud image (newer code state than the arm64
+      tag). For EKS/x86 installs. Unify code states in the next CI-built
+      release.
+  - ref: docsie/dokuta:onprem-0.1.0
+    digest: sha256:541eb5e0441663c4e93fe57d49645fc36033705d708331c7b406ccbb7bfd44f9
+    platforms: [linux/arm64]
+  - ref: docsie/dokuta-api:onprem-0.1.0
+    digest: sha256:97c14388f1ad7d88d12aa7f94ca3c6b6867b42d7592128953dc3e7d6e7e2ded5
+    platforms: [linux/arm64]
+  - ref: docsie/dokuta-celery:onprem-0.1.0
+    digest: sha256:228c382324465b36980965e4d607aaf4801748fb21ba5fd3a1464267dcdcdd51
+    platforms: [linux/arm64]
+  - ref: docsie/collaboration-relay:onprem-0.1.0
+    digest: sha256:b1faee98ba380a51bbd058e16d46c7cbc285c9747e25582b390d8530ec1387d0
+    platforms: [linux/amd64, linux/arm64]
+  - ref: docsie/dokuta-pptx-renderer:onprem-0.1.0
+    digest: sha256:cd5dd3e1d38637ab112d00a2cb6b00e80d318e66334ffeb55aad50c3a0fdfd2b
+    platforms: [linux/amd64]
+
+# Third-party images (tag-pinned in charts; digest-pin at bundle build).
+third_party:
+  - postgres:17-alpine
+  - redis:7-alpine
+  - quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+  - quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+  - ghcr.io/chroma-core/chroma:0.5.4
+  - docker.elastic.co/elasticsearch/elasticsearch:7.17.28
+  - nginx:1.27-alpine
+  - python:3.11-slim
+
+# Known gaps — MUST be closed before this is a customer-shippable GA release.
+gaps:
+  - docsie/image-processor and docsie/pdf-converter are not published to
+    Docker Hub; build + push (multi-arch) required.
+  - glmocr-pipeline / cad-adapter / whisper-openai-adapter charts install
+    dependencies at pod startup; need real prebuilt images for airgap.
+  - Single-arch first-party images (see platforms above); CI multi-arch
+    builds unify arch and code state.
+  - No offline images/oci-layout bundle produced yet (bundle builder CI).

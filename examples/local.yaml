@@ -1,0 +1,11 @@
+# Existing Linux Kubernetes cluster; operator supplies registry access and TLS.
+global:
+  hostname: docs.internal.example.com
+  scheme: https
+  imagePullSecret: docsie-registry
+  imagePullSecrets:
+    - name: docsie-registry
+profiles:
+  kb: true
+  kbAi: false
+  full: false

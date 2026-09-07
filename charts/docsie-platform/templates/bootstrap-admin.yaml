@@ -1,0 +1,79 @@
+{{- if .Values.bootstrap.enabled }}
+{{- $app := .Subcharts.docsie }}
+{{- $name := printf "%s-bootstrap-admin" .Release.Name }}
+{{- $existing := lookup "v1" "Secret" .Release.Namespace $name }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $name }}
+  annotations:
+    helm.sh/resource-policy: keep
+type: Opaque
+stringData:
+  email: {{ required "bootstrap.adminEmail is required" .Values.bootstrap.adminEmail | quote }}
+  {{- if and $existing (hasKey ($existing.data | default dict) "password") }}
+  password: {{ index $existing.data "password" | b64dec | quote }}
+  {{- else }}
+  password: {{ randAlphaNum 32 | quote }}
+  {{- end }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "20"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      enableServiceLinks: false
+      restartPolicy: Never
+      serviceAccountName: {{ include "docsie.serviceAccountName" $app }}
+      {{- with $app.Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: bootstrap-admin
+          image: {{ include "docsie.image" $app | quote }}
+          imagePullPolicy: {{ $app.Values.image.pullPolicy }}
+          command:
+            - python
+            - manage.py
+            - shell
+            - -c
+            - |
+              import os
+              from django.contrib.auth import get_user_model
+              from django.db import transaction
+              from allauth.account.models import EmailAddress
+              with transaction.atomic():
+                  email = os.environ['DOCSIE_BOOTSTRAP_EMAIL'].strip().lower()
+                  user, created = get_user_model().objects.get_or_create(
+                      username=email,
+                      defaults={'email': email, 'is_staff': True, 'is_superuser': True, 'is_active': True},
+                  )
+                  if created:
+                      user.set_password(os.environ['DOCSIE_BOOTSTRAP_PASSWORD'])
+                      user.save(update_fields=['password'])
+                      EmailAddress.objects.get_or_create(user=user, email=email, defaults={'verified': True, 'primary': True})
+                  print('Initial administrator created.' if created else 'Administrator already exists; password unchanged.')
+          {{- include "docsie.workloadEnv" (dict "root" $app "component" (dict "extraEnv" (list
+                (dict "name" "DOCSIE_BOOTSTRAP_EMAIL" "valueFrom" (dict "secretKeyRef" (dict "name" $name "key" "email")))
+                (dict "name" "DOCSIE_BOOTSTRAP_PASSWORD" "valueFrom" (dict "secretKeyRef" (dict "name" $name "key" "password")))
+              ))) | nindent 10 }}
+          envFrom:
+            - secretRef:
+                name: {{ include "docsie.secretName" $app }}
+            {{- with $app.Values.workload.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- include "docsie.configVolumeMounts" $app | nindent 10 }}
+          resources:
+            {{- toYaml .Values.migrations.resources | nindent 12 }}
+      {{- include "docsie.configVolumes" $app | nindent 6 }}
+{{- end }}

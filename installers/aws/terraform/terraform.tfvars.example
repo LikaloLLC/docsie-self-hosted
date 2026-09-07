@@ -1,0 +1,70 @@
+# Docsie AWS installer — example variables.
+# Copy to terraform.tfvars (or my-deployment.tfvars) and edit.
+# Placeholder values only; every value here is an example, not a default you
+# should keep.
+
+# --- Required -------------------------------------------------------------
+
+# Used in every AWS resource name: <project>-<deployment_name>-<environment>
+deployment_name = "acme"
+
+# Public hostname the Docsie app will be served on. You own the DNS.
+docsie_domain = "docs.example.com"
+
+# --- Core -----------------------------------------------------------------
+
+aws_region  = "us-east-1"
+environment = "prod"
+
+# Must not overlap networks you plan to peer or VPN with.
+vpc_cidr = "10.100.0.0/16"
+az_count = 3
+
+# STRONGLY recommended: restrict the EKS API to your office/VPN egress IPs.
+cluster_endpoint_public_access_cidrs = ["198.51.100.10/32"]
+
+# --- Sizing (defaults are a small production baseline) --------------------
+
+# app_node_instance_types = ["m6i.xlarge"]
+# app_node_desired_size   = 2
+# postgres_instance_class = "db.r6g.large"
+# postgres_instance_count = 2   # 2+ for HA writer/reader pair
+# redis_node_type         = "cache.t4g.small"
+# redis_node_count        = 2   # 2+ for multi-AZ automatic failover
+
+# --- Optional features ----------------------------------------------------
+
+# Transactional email through SES (recommended for real deployments; without
+# it, emails go to the console log only). After apply, publish the DNS records
+# from the ses_smtp_dns_records output and request SES production access.
+# enable_ses_smtp    = true
+# ses_sending_domain = "docs.example.com"
+# ses_from_email     = "no-reply@docs.example.com"
+
+# Extra browser origins allowed to upload to S3 (the docsie_domain origin is
+# always allowed).
+# additional_cors_origins = ["https://portal.example.com"]
+
+# Optional node groups for additional Docsie platform services.
+# enable_dokuta_node_group      = true   # video-to-docs processing workers
+# enable_search_data_node_group = true   # in-cluster Elasticsearch/App Search, MongoDB
+# enable_eks_gpu_node_group     = true   # private OCR/transcription/TTS model runtimes
+
+# --- Private-only mode (advanced) -----------------------------------------
+# Fully private VPC: no IGW/NAT, VPC endpoints for AWS APIs, private EKS API.
+# Requires mirrored container images (private ECR) and a two-phase apply:
+# first with deploy_incluster_resources = false, then true once you have a
+# network path (VPN / SSM ops host) to the private EKS endpoint.
+# enable_public_subnets          = false
+# enable_nat_gateway             = false
+# cluster_endpoint_public_access = false
+# enable_interface_vpc_endpoints = true
+# enable_ops_access_host         = true
+# deploy_incluster_resources     = false
+
+# --- Destroy-time safety --------------------------------------------------
+# Set these ONLY in disposable test accounts, or right before a deliberate
+# teardown (see destroy-aws.sh).
+# deletion_protection = false
+# skip_final_snapshot = true
+# s3_force_destroy    = true

@@ -1,0 +1,230 @@
+# Example on-prem / airgapped values for the docsie chart.
+#
+# Everything here uses placeholder hostnames (docsie.example.com) and generic
+# in-cluster service names — replace them per install. No credential values
+# appear in this file: secrets come from a customer-created K8s Secret
+# (`manualSecret.name`, required keys listed in README.md) plus the
+# lookup-guarded generated secret (`manualSecret.generate`).
+#
+# Render/verify:
+#   helm template docsie . -f values.onprem-example.yaml
+
+global:
+  secretProvider: manual
+  hostname: docsie.example.com
+  # Airgapped installs preload images into containerd — no pull secret needed.
+  imagePullSecrets: []
+
+image:
+  repository: docsie/docsie-server
+  # Release bundles pin this to onprem-<version>; never run a floating tag
+  # on-prem.
+  tag: "beta"
+  pullPolicy: IfNotPresent
+
+manualSecret:
+  # Customer-created secret holding DATABASE_URL, REDIS_URL, S3 credentials,
+  # etc. — see "Required manual secret keys" in README.md.
+  name: docsie-env
+  generate:
+    enabled: true
+    name: docsie-generated-secret
+    keys:
+      - DJANGO_SECRET_KEY
+      - FIELD_ENCRYPTION_KEY
+
+# Optional Django settings overlay (config.settings.onprem) mounted from a
+# ConfigMap created by the installer.
+onpremSettings:
+  configMapName: ""
+
+# Non-secret environment shared by web + all workers. Hostname-bearing values
+# reference the public hostname; in-cluster endpoints use plain service names
+# (same namespace) — qualify with .<namespace>.svc.cluster.local only when a
+# dependency lives in another namespace.
+plainEnv:
+  DJANGO_SETTINGS_MODULE: config.settings.onprem
+  PYTHONUNBUFFERED: "1"
+  DOMAIN: docsie.example.com
+  APP_BASE_URL: https://docsie.example.com
+  BASE_URL: https://docsie.example.com
+  REDIRECT_URL: https://docsie.example.com
+  DOCSIE_BASE_URL: https://docsie.example.com
+  BILLING_BASE_URL: https://docsie.example.com
+  ADDITIONAL_ALLOWED_HOSTS: docsie.example.com,localhost,127.0.0.1
+  CSRF_TRUSTED_ORIGINS: https://docsie.example.com
+  OTP_WEBAUTHN_RP_ID: docsie.example.com
+  OTP_WEBAUTHN_ALLOWED_ORIGINS: https://docsie.example.com
+  EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+  EXTERNAL_TELEMETRY_ENABLED: "false"
+  DISABLE_BILLING_SIDE_EFFECTS: "true"
+  DOCSIE_DISABLE_GCP_CREDENTIAL_FETCH: "true"
+  # Object storage (MinIO) — endpoints only; access keys live in docsie-env.
+  DOCSIE_USE_S3_STORAGE: "true"
+  DJANGO_AWS_S3_ENDPOINT_URL: http://minio:9000
+  DJANGO_AWS_S3_PUBLIC_ENDPOINT_URL: https://docsie.example.com
+  DJANGO_AWS_S3_REGION_NAME: us-east-1
+  DJANGO_AWS_S3_ADDRESSING_STYLE: path
+  DJANGO_AWS_S3_SIGNATURE_VERSION: s3v4
+  DJANGO_AWS_QUERYSTRING_AUTH: "true"
+  DJANGO_AWS_STORAGE_BUCKET_NAME: docsie-media
+  DJANGO_AWS_UPLOAD_BUCKET_NAME: docsie-upload
+  DJANGO_AWS_TEMP_BUCKET_NAME: docsie-temp
+  DJANGO_AWS_PORTAL_BUCKET_NAME: docsie-portals
+  DOCSIE_CDN_BUCKET_NAME: docsie-cdn
+  # CDN URLs served through staticProxy below.
+  APP_CDN_BASE_URL: https://docsie.example.com/docsie-cdn/appcdn2/
+  LIB_CDN_BASE_URL: https://docsie.example.com/docsie-cdn/lib/
+  CDN_BASE_URL: https://docsie.example.com/docsie-cdn/cdn/
+  ENTERPRISE_STATIC_URL: https://docsie.example.com/docsie-cdn/appcdn2/
+  DEPLOYMENT_SCRIPT_LIBRARYPATH: https://docsie.example.com/docsie-cdn/lib/
+  DEPLOYMENT_SCRIPT_VERSION: current
+  DEPLOYMENT_BASE_STYLE: https://docsie.example.com/docsie-cdn/lib/current/styles/docsie.css
+  HELP_CENTER_SCRIPT_LIBRARYPATH: https://docsie.example.com/docsie-cdn/lib/inapp/
+  HELP_CENTER_SCRIPT_VERSION: "1.0.0"
+  # Supporting services (adjust namespaces to your install layout).
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+  IMAGE_PROCESSOR_URL: http://image-processor/
+  PDF_CONVERTER_BACKEND: service
+  PDF_CONVERTER_SERVICE_URL: http://pdf-converter/convert
+  PDF_CONVERTER_SERVICE_TIMEOUT_SECONDS: "240"
+  # Local OpenAI-compatible model endpoint (Ollama/vLLM) for airgapped AI.
+  OPENAI_API_BASE: http://model-endpoint.example.internal:11434/v1
+  OPENAI_BASE_URL: http://model-endpoint.example.internal:11434/v1
+  OLLAMA_API_BASE: http://model-endpoint.example.internal:11434
+
+web:
+  enabled: true
+  replicaCount: 1
+  # Single-node friendly rollout: never run two web pods during upgrade.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+# The cloud celery deployments are replaced by the workers map below —
+# disable them so queues are not double-consumed.
+celery:
+  enabled: false
+celeryBackground:
+  enabled: false
+celerySsr:
+  enabled: false
+celeryBeat:
+  enabled: false
+celeryRewrite:
+  enabled: false
+
+workers:
+  enabled: true
+  # Single-node rollout + long grace so in-flight celery tasks finish.
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  terminationGracePeriodSeconds: 300
+  classes:
+    generic:
+      enabled: true
+      replicas: 1
+      command: ["celery"]
+      args: ["-A", "docsie.taskapp", "worker", "-l", "INFO", "--concurrency=1", "--queues=celery", "-O", "fair"]
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+    background:
+      enabled: true
+      replicas: 1
+      command: ["celery"]
+      args: ["-A", "docsie.taskapp", "worker", "-l", "INFO", "--concurrency=1", "--queues=background", "-O", "fair"]
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+    rewrite:
+      enabled: true
+      replicas: 1
+      command: ["celery"]
+      args: ["-A", "docsie.taskapp", "worker", "-l", "INFO", "--concurrency=1", "--queues=rewrite", "--prefetch-multiplier=1", "-O", "fair"]
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: "2"
+          memory: 3Gi
+    ssr:
+      enabled: true
+      replicas: 1
+      command: ["celery"]
+      args: ["-A", "docsie.taskapp", "worker", "-l", "INFO", "--concurrency=1", "--queues=server_side_render_queue", "-O", "fair"]
+      resources:
+        requests:
+          cpu: 250m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 2Gi
+    beat:
+      enabled: true
+      replicas: 1
+      strategy:
+        type: Recreate
+      command: ["celery"]
+      args: ["-A", "docsie.taskapp", "beat", "-l", "INFO"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+
+staticProxy:
+  enabled: true
+  minioEndpoint: http://minio:9000
+  upstreamHost: minio:9000
+  s3Proxy:
+    enabled: true
+    paths:
+      - /docsie-media/
+      - /docsie-upload/
+      - /docsie-temp/
+      - /docsie-portals/
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: ""  # global.hostname
+    tls:
+      - secretName: docsie-tls
+        hosts: []  # empty entries fall back to global.hostname
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: ""  # global.hostname
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: docsie-tls
+      hosts:
+        - docsie.example.com

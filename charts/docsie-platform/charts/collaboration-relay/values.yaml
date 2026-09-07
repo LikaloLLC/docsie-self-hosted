@@ -1,0 +1,49 @@
+# Vendored from setup/helm/collaboration-relay for docsie-platform.
+# Normalizations: customer-prefixed image tag -> neutral release tag; fixed
+# same-namespace service name; ingress host falls back to global.hostname.
+# Fixed same-namespace service name; Docsie/Dokuta reference
+# ws://collaboration-relay:8080/hub directly.
+fullnameOverride: collaboration-relay
+
+replicaCount: 1
+
+image:
+  repository: docsie/collaboration-relay
+  # TODO(onprem-bundle): retag as docsie/collaboration-relay:onprem-0.1.0
+  # (image itself is already multi-arch).
+  tag: "onprem-0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8080
+
+env:
+  HUB_SERVER_HOST: "0.0.0.0"
+  HUB_SERVER_PORT: "8080"
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    # host empty = global.hostname (relay is normally path-routed under /hub)
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: whisper-openai-adapter
+description: OpenAI-compatible Whisper transcription adapter backed by Groq.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

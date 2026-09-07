@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.fullnameOverride | default "minio" }}
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: api
+      port: {{ .Values.service.apiPort }}
+      targetPort: api
+      {{- if and (eq .Values.service.type "NodePort") .Values.service.apiNodePort }}
+      nodePort: {{ .Values.service.apiNodePort }}
+      {{- end }}
+    - name: console
+      port: {{ .Values.service.consolePort }}
+      targetPort: console
+      {{- if and (eq .Values.service.type "NodePort") .Values.service.consoleNodePort }}
+      nodePort: {{ .Values.service.consoleNodePort }}
+      {{- end }}
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: {{ .Release.Name }}

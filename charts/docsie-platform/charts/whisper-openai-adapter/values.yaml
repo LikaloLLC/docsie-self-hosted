@@ -1,0 +1,70 @@
+# Vendored from setup/helm/whisper-openai-adapter for docsie-platform.
+#
+# TODO(onprem-bundle) AIRGAP-HOSTILE: this chart pip-installs its app at pod
+# start (initContainer) on python:3.11-slim — dead on arrival without egress.
+# Build a real image (docsie/whisper-openai-adapter:onprem-<version>) with the
+# requirements baked in and drop the initContainer. Tracked as a separate work
+# item in ONPREM_INSTALLER_DESIGN.md §3.3 rule 5.
+#
+# Normalizations: upstream base URL defaults to a LOCAL OpenAI-compatible
+# Whisper server (was https://api.groq.com/openai/v1 — Groq SaaS is now an
+# explicit opt-in for connected installs); GROQ_API_KEY no longer required;
+# resource names de-collided via fullname helper.
+replicaCount: 1
+
+image:
+  repository: python
+  tag: "3.11-slim"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 8080
+
+env:
+  WHISPER_ADAPTER_HOST: "0.0.0.0"
+  WHISPER_ADAPTER_PORT: "8080"
+  WHISPER_ADAPTER_LOG_LEVEL: "INFO"
+  WHISPER_ADAPTER_REQUEST_TIMEOUT: "120"
+  WHISPER_ADAPTER_MAX_UPLOAD_MB: "100"
+  # Local OpenAI-compatible Whisper backend (faster-whisper / whisper.cpp
+  # server) reachable from the cluster. Point at the customer's model host —
+  # e.g. the same host as global.modelEndpoint. Groq SaaS
+  # (https://api.groq.com/openai/v1) is an explicit opt-in for connected
+  # installs only.
+  GROQ_BASE_URL: "http://faster-whisper.example.com:8000/v1"
+  WHISPER_MODEL: "whisper-large-v3-turbo"
+
+secretEnv:
+  # Prefer existingSecret in shared/prod environments.
+  existingSecret: ""
+  values:
+    # Local backends ignore auth; defaults to a placeholder when empty.
+    GROQ_API_KEY: ""
+    ADAPTER_API_TOKEN: ""
+
+auth:
+  # When true, inbound requests must use Authorization: Bearer <ADAPTER_API_TOKEN>.
+  enabled: false
+
+initResources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

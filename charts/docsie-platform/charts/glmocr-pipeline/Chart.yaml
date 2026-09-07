@@ -1,0 +1,5 @@
+apiVersion: v2
+name: glmocr-pipeline
+description: GLM-OCR document parsing pipeline with layout detection
+version: 0.1.0
+appVersion: "1.0.0"

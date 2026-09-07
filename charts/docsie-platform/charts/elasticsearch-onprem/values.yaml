@@ -1,0 +1,33 @@
+# Vendored from external/docsie-helm-charts/onprem/elasticsearch for docsie-platform.
+# Normalization: storageClassName falls back to global.storageClass.
+replicaCount: 1
+
+image:
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  tag: "7.17.28"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 9200
+  transportPort: 9300
+
+clusterName: docsie-local
+heapSize: 1g
+
+persistence:
+  enabled: true
+  storageClassName: ""
+  size: 20Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    cpu: "2"
+    memory: 4Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

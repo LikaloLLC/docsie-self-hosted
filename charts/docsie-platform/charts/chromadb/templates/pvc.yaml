@@ -1,0 +1,26 @@
+{{- if .Values.pvc.enabled }}
+{{- if not .Values.pvc.existingClaim}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.pvc.persistentVolumeClaim.name }}
+  labels:
+    {{- include "chromadb.labels" . | nindent 4 }}
+    {{- with .Values.pvc.persistentVolumeClaim.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.pvc.persistentVolumeClaim.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- with (.Values.pvc.persistentVolumeClaim.storageClassName | default ((.Values.global | default dict).storageClass | default "")) }}
+  storageClassName: {{ . }}
+  {{- end }}
+  accessModes:
+    {{- toYaml .Values.pvc.persistentVolumeClaim.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.pvc.persistentVolumeClaim.size }}
+{{- end }}
+{{- end }}

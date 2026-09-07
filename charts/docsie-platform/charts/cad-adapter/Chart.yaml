@@ -1,0 +1,5 @@
+apiVersion: v2
+name: cad-adapter
+description: Internal CAD analysis adapter for Rhino 3DM and open CAD formats
+version: 0.1.0
+appVersion: "0.1.0"

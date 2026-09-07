@@ -1,0 +1,17 @@
+docsie-platform {{ .Chart.Version }} installed as release "{{ .Release.Name }}"
+in namespace "{{ .Release.Namespace }}".
+
+Profiles enabled:
+  kb:    {{ .Values.profiles.kb }}
+  kb-ai: {{ .Values.profiles.kbAi }}
+  full:  {{ .Values.profiles.full }}
+
+Public hostname: {{ .Values.global.hostname }}
+Model endpoint:  {{ .Values.global.modelEndpoint | default "(not set — AI features degraded)" }}
+
+Credentials were generated into the `docsie-platform-secrets` /
+`docsie-platform-derived` Secrets on first install and are never rotated by
+upgrades (both carry helm.sh/resource-policy: keep).
+
+Verify the install:
+  installers/bundle/verify.sh --namespace {{ .Release.Namespace }} --release {{ .Release.Name }}

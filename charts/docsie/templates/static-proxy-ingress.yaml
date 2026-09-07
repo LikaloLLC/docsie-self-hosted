@@ -1,0 +1,51 @@
+{{- if and .Values.staticProxy.enabled .Values.staticProxy.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "docsie.staticProxyName" . }}
+  labels:
+    {{- include "docsie.labels" . | nindent 4 }}
+    app.kubernetes.io/component: static-proxy
+  {{- with .Values.staticProxy.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.staticProxy.ingress.className }}
+  ingressClassName: {{ .Values.staticProxy.ingress.className }}
+  {{- end }}
+  {{- with .Values.staticProxy.ingress.tls }}
+  tls:
+    {{- range . }}
+    - secretName: {{ .secretName }}
+      hosts:
+        {{- range (default (list "") .hosts) }}
+        - {{ default $.Values.global.hostname . | quote }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.staticProxy.ingress.hosts }}
+    - host: {{ default $.Values.global.hostname .host | quote }}
+      http:
+        paths:
+          - path: {{ $.Values.staticProxy.pathPrefix }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "docsie.staticProxyName" $ }}
+                port:
+                  number: {{ $.Values.staticProxy.service.port }}
+          {{- if $.Values.staticProxy.s3Proxy.enabled }}
+          {{- range $.Values.staticProxy.s3Proxy.paths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "docsie.staticProxyName" $ }}
+                port:
+                  number: {{ $.Values.staticProxy.service.port }}
+          {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}

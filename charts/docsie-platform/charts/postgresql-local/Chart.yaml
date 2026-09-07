@@ -1,0 +1,9 @@
+apiVersion: v2
+name: postgresql-local
+description: >-
+  Minimal single-node PostgreSQL for Docsie on-prem installs, built on the
+  official postgres image (NOT Bitnami, per the installer strategy decision).
+  Password comes from the platform-generated secret; upgrades never rotate it.
+type: application
+version: 0.1.0
+appVersion: "17"

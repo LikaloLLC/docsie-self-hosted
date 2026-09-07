@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dokuta-fastapi
+  labels:
+    app.kubernetes.io/name: dokuta-fastapi
+    app.kubernetes.io/instance: dokuta
+spec:
+  replicas: {{ .Values.fastapi.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dokuta-fastapi
+      app.kubernetes.io/instance: dokuta
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dokuta-fastapi
+        app.kubernetes.io/instance: dokuta
+    spec:
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      containers:
+        - name: fastapi
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.fastapi.image.repository }}:{{ .Values.fastapi.image.tag }}"
+          imagePullPolicy: {{ .Values.fastapi.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.fastapi.service.port }}
+          env:
+          {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.secretName }}
+                  key: {{ $value.key }}
+          {{- end }}
+          {{- include "dokuta.llmEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.fastapi.resources | nindent 12 }}
+      {{- $pullSecrets := .Values.imagePullSecrets | default list }}
+      {{- with ((.Values.global | default dict).imagePullSecret) }}
+      {{- $pullSecrets = append $pullSecrets (dict "name" .) }}
+      {{- end }}
+      {{- with $pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

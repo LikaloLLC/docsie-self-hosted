@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled }}
+{{- $g := .Values.global | default dict }}
+{{- $host := .Values.ingress.host | default (printf "pptx.%s" ($g.hostname | default "docsie.example.com")) }}
+{{- $tls := .Values.ingress.tls }}
+{{- $gtls := $g.tls | default dict }}
+{{- if and (not $tls) (eq ($gtls.mode | default "none") "secret") }}
+{{- $tls = list (dict "secretName" $gtls.secretName "hosts" (list $host)) }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "dokuta-pptx-renderer.fullname" . }}
+  labels:
+    {{- include "dokuta-pptx-renderer.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if $tls }}
+  tls:
+    {{- toYaml $tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "dokuta-pptx-renderer.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}

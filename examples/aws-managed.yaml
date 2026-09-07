@@ -1,0 +1,21 @@
+# Non-secret preflight profile. The installer generates deployment-specific values.
+storage:
+  mode: managed
+  postgresql:
+    enabled: false
+  redis:
+    enabled: false
+  minio:
+    enabled: false
+profiles:
+  kb: true
+  kbAi: false
+  full: false
+docsie:
+  manualSecret:
+    name: docsie-secret
+  workload:
+    extraEnvFrom: []
+  plainEnv:
+    REDIS_ENDPOINT: null
+    DJANGO_AWS_S3_ENDPOINT_URL: null

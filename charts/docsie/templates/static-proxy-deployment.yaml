@@ -1,0 +1,64 @@
+{{- if .Values.staticProxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docsie.staticProxyName" . }}
+  labels:
+    {{- include "docsie.labels" . | nindent 4 }}
+    app.kubernetes.io/component: static-proxy
+spec:
+  replicas: {{ .Values.staticProxy.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "docsie.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: static-proxy
+  template:
+    metadata:
+      annotations:
+        checksum/static-proxy-config: {{ toJson .Values.staticProxy | sha256sum }}
+      labels:
+        {{- include "docsie.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: static-proxy
+    spec:
+      enableServiceLinks: false
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: nginx
+          image: "{{ .Values.staticProxy.image.repository }}:{{ .Values.staticProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.staticProxy.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.staticProxy.resources | nindent 12 }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ include "docsie.staticProxyName" . }}-nginx
+        - name: nginx-cache
+          emptyDir:
+            sizeLimit: {{ .Values.staticProxy.cache.emptyDirSizeLimit | quote }}
+{{- end }}

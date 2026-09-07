@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dokuta
+  labels:
+    app.kubernetes.io/name: dokuta
+    app.kubernetes.io/instance: dokuta
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dokuta
+      app.kubernetes.io/instance: dokuta
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dokuta
+        app.kubernetes.io/instance: dokuta
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      containers:
+      - name: dokuta
+        image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.port }}
+        env:
+        {{- range $key, $value := .Values.env }}
+        - name: {{ $key }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.secretName }}
+              key: {{ $value.key }}
+        {{- end }}
+        {{- include "dokuta.llmEnv" . | nindent 8 }}
+        resources:
+{{ toYaml .Values.resources | nindent 10 }}
+      {{- $pullSecrets := .Values.imagePullSecrets | default list }}
+      {{- with ((.Values.global | default dict).imagePullSecret) }}
+      {{- $pullSecrets = append $pullSecrets (dict "name" .) }}
+      {{- end }}
+      {{- with $pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

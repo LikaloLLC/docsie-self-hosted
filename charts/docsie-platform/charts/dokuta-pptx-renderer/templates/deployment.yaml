@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dokuta-pptx-renderer.fullname" . }}
+  labels:
+    {{- include "dokuta-pptx-renderer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- if and .Values.persistence.enabled (eq (int .Values.replicaCount) 1) }}
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "dokuta-pptx-renderer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "dokuta-pptx-renderer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      enableServiceLinks: false
+      {{- $pullSecrets := .Values.imagePullSecrets | default list }}
+      {{- with ((.Values.global | default dict).imagePullSecret) }}
+      {{- $pullSecrets = append $pullSecrets (dict "name" .) }}
+      {{- end }}
+      {{- with $pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: dokuta-pptx-renderer
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            {{- $g := .Values.global | default dict }}
+            {{- $host := $g.hostname | default "docsie.example.com" }}
+            {{- $defaultOrigins := printf "https://%s,https://dokuta.%s" $host $host }}
+            {{- range $key, $value := .Values.env }}
+            {{- if ne $key "DOKUTA_PPTX_CORS_ORIGINS" }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            - name: DOKUTA_PPTX_CORS_ORIGINS
+              value: {{ .Values.env.DOKUTA_PPTX_CORS_ORIGINS | default $defaultOrigins | quote }}
+            {{- range $key, $value := .Values.secretEnv }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dokuta-pptx-renderer.fullname" $ }}-secret
+                  key: {{ $key }}
+            {{- end }}
+          {{- with .Values.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ . | quote }}
+          {{- end }}
+          volumeMounts:
+            - name: cache
+              mountPath: {{ .Values.env.DOKUTA_PPTX_CACHE_DIR | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: cache
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "dokuta-pptx-renderer.fullname" . }}-cache
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

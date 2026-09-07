@@ -1,0 +1,354 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "glmocr-pipeline.fullname" . }}-config
+data:
+  server.py: |
+    """
+    GLM-OCR Pipeline Server
+
+    Uses pymupdf for PDF rendering + image extraction,
+    GLM-OCR (vLLM) for text recognition.
+    Light on resources — no PyTorch, no layout model.
+    """
+    import asyncio
+    import base64
+    import io
+    import json
+    import os
+    import tempfile
+    import traceback
+
+    import fitz  # pymupdf
+    import requests as http_requests
+    from fastapi import FastAPI, HTTPException, Request
+    from fastapi.responses import JSONResponse
+    from PIL import Image
+    import uvicorn
+
+    app = FastAPI(title="GLM-OCR Pipeline")
+
+    OCR_API_HOST = os.environ.get("GLMOCR_OCR_API_HOST", "localhost")
+    OCR_API_PORT = os.environ.get("GLMOCR_OCR_API_PORT", "8000")
+    OCR_API_SCHEME = os.environ.get("GLMOCR_OCR_API_SCHEME", "http")
+    OCR_API_KEY = os.environ.get("GLMOCR_OCR_API_KEY", "")
+    OCR_MODEL = os.environ.get("GLMOCR_MODEL", "glm-ocr")
+
+    def get_ocr_url():
+        return f"{OCR_API_SCHEME}://{OCR_API_HOST}:{OCR_API_PORT}/v1/chat/completions"
+
+    DEFAULT_PAGE_PROMPT = (
+        "OCR this document page. Return the text content as clean markdown. "
+        "Preserve every table as a GitHub-Flavored Markdown pipe table with one cell per source column, "
+        "a separator row, the original row order, and the same cell count in every row. Use only leaf column "
+        "labels as the Markdown header. Put any full-width or multi-column group label on its own line before "
+        "the table instead of turning it into an extra column. Use visible grid lines to detect merged cells: "
+        "when a source cell has no horizontal divider and spans multiple rows, repeat its complete value in "
+        "every row it spans; never distribute one merged cell's list items across separate rows. Preserve "
+        "multiple items inside a cell with <br>. Never flatten a table into prose or a list. "
+        "Do not repeat text. Skip headers, footers, and page numbers. Output only the main body content."
+    )
+    DEFAULT_FIGURE_PROMPT = (
+        "OCR this cropped technical figure exactly. Preserve the figure title, explanatory text, legends, "
+        "every signal name, and every visible value in left-to-right order for each row. For a timing diagram, "
+        "list each signal row separately. Return clean markdown only. Do not infer text or values that are not visible."
+    )
+
+    _STRUCTURED_OUTPUT_NAME = "docsie_preview_labels"
+    _MAX_STRUCTURED_LABELS = 256
+    _MAX_STRUCTURED_LABEL_CHARS = 300
+
+    def validate_response_format(value):
+        """Allow only one bounded label-ledger JSON schema for image OCR."""
+        if value is None:
+            return None
+        if not isinstance(value, dict) or set(value) != {"type", "json_schema"}:
+            raise ValueError("response_format must contain only type and json_schema")
+        if value.get("type") != "json_schema":
+            raise ValueError("response_format.type must be json_schema")
+        envelope = value.get("json_schema")
+        if not isinstance(envelope, dict) or set(envelope) != {"name", "strict", "schema"}:
+            raise ValueError("response_format.json_schema has an invalid envelope")
+        name = envelope.get("name")
+        if name != _STRUCTURED_OUTPUT_NAME:
+            raise ValueError("response_format.json_schema.name is not allowlisted")
+        if envelope.get("strict") is not True:
+            raise ValueError("response_format.json_schema.strict must be true")
+        schema = envelope.get("schema")
+        if not isinstance(schema, dict) or set(schema) != {
+            "type", "properties", "required", "additionalProperties",
+        }:
+            raise ValueError("response_format schema has invalid object keys")
+        if (
+            schema.get("type") != "object"
+            or schema.get("required") != ["labels"]
+            or schema.get("additionalProperties") is not False
+        ):
+            raise ValueError("response_format schema must be a closed labels object")
+        properties = schema.get("properties")
+        if not isinstance(properties, dict) or set(properties) != {"labels"}:
+            raise ValueError("response_format schema may define only labels")
+        labels = properties.get("labels")
+        if not isinstance(labels, dict) or set(labels) not in (
+            {"type", "items", "maxItems"},
+            {"type", "items", "minItems", "maxItems"},
+        ):
+            raise ValueError("response_format labels schema is invalid")
+        max_items = labels.get("maxItems")
+        if (
+            labels.get("type") != "array"
+            or isinstance(max_items, bool)
+            or not isinstance(max_items, int)
+            or not 1 <= max_items <= _MAX_STRUCTURED_LABELS
+        ):
+            raise ValueError("response_format labels array is unbounded")
+        min_items = labels.get("minItems")
+        if min_items is not None and (
+            isinstance(min_items, bool)
+            or not isinstance(min_items, int)
+            or min_items != max_items
+        ):
+            raise ValueError("response_format exact label count is invalid")
+        items = labels.get("items")
+        if not isinstance(items, dict) or set(items) != {"type", "maxLength"}:
+            raise ValueError("response_format label item schema is invalid")
+        max_length = items.get("maxLength")
+        if (
+            items.get("type") != "string"
+            or isinstance(max_length, bool)
+            or not isinstance(max_length, int)
+            or not 1 <= max_length <= _MAX_STRUCTURED_LABEL_CHARS
+        ):
+            raise ValueError("response_format label strings are unbounded")
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": name,
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "labels": {
+                            "type": "array",
+                            "items": {"type": "string", "maxLength": max_length},
+                            **({"minItems": min_items} if min_items is not None else {}),
+                            "maxItems": max_items,
+                        },
+                    },
+                    "required": ["labels"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+
+    def run_image_ocr(image_bytes: bytes, prompt: str, response_format=None) -> dict:
+        """Send one image to GLM-OCR vLLM and retain response diagnostics."""
+        b64 = base64.b64encode(image_bytes).decode()
+        headers = {"Content-Type": "application/json"}
+        if OCR_API_KEY:
+            headers["Authorization"] = f"Bearer {OCR_API_KEY}"
+
+        request_payload = {
+            "model": OCR_MODEL,
+            "messages": [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+                {"type": "text", "text": prompt},
+            ]}],
+            "max_tokens": 4096,
+            "temperature": 0,
+        }
+        validated_response_format = validate_response_format(response_format)
+        if validated_response_format is not None:
+            request_payload["response_format"] = validated_response_format
+        resp = http_requests.post(
+            get_ocr_url(),
+            headers=headers,
+            json=request_payload,
+            timeout=120,
+        )
+        if resp.status_code != 200:
+            raise RuntimeError(f"GLM-OCR backend returned {resp.status_code}: {resp.text[:300]}")
+
+        payload = resp.json()
+        choice = (payload.get("choices") or [{}])[0]
+        message = choice.get("message") or {}
+        return {
+            "model": OCR_MODEL,
+            "text": str(message.get("content") or "").strip(),
+            "finish_reason": choice.get("finish_reason"),
+            "usage": payload.get("usage") or {},
+        }
+
+    def ocr_single_page(page_png_bytes: bytes) -> str:
+        """Send a page image to GLM-OCR vLLM and get markdown text back."""
+        try:
+            return run_image_ocr(page_png_bytes, DEFAULT_PAGE_PROMPT)["text"]
+        except Exception as exc:
+            print(f"OCR error: {exc}")
+            return ""
+
+    def decode_image_input(file_input: str) -> bytes:
+        """Decode and normalize an image data URI or raw base64 payload to PNG."""
+        if not file_input:
+            raise ValueError("image or image_base64 is required")
+        if file_input.startswith("data:"):
+            _, encoded = file_input.split(",", 1)
+        else:
+            encoded = file_input
+        raw = base64.b64decode(encoded)
+        with Image.open(io.BytesIO(raw)) as source:
+            normalized = source.convert("RGB")
+            output = io.BytesIO()
+            normalized.save(output, format="PNG", optimize=True)
+        return output.getvalue()
+
+    # Minimum image dimensions to extract (filters out icons, dots, decorative elements)
+    MIN_IMAGE_WIDTH = int(os.environ.get("GLMOCR_MIN_IMAGE_WIDTH", "100"))
+    MIN_IMAGE_HEIGHT = int(os.environ.get("GLMOCR_MIN_IMAGE_HEIGHT", "100"))
+    MIN_IMAGE_BYTES = int(os.environ.get("GLMOCR_MIN_IMAGE_BYTES", "5000"))  # ~5KB
+
+    def extract_images_from_page(page) -> list:
+        """Extract meaningful images from a PDF page using pymupdf.
+
+        Filters out small decorative elements (icons, bullets, logos under
+        100x100px or < 5KB) to match Mistral's selective extraction behavior.
+        """
+        images = []
+        seen_xrefs = set()  # deduplicate (same image can appear multiple times)
+        for img_index, img_info in enumerate(page.get_images(full=True)):
+            xref = img_info[0]
+            if xref in seen_xrefs:
+                continue
+            seen_xrefs.add(xref)
+            try:
+                base_image = page.parent.extract_image(xref)
+                if not base_image:
+                    continue
+                img_bytes = base_image["image"]
+                w = base_image.get("width", 0)
+                h = base_image.get("height", 0)
+                # Skip small/decorative images
+                if w < MIN_IMAGE_WIDTH or h < MIN_IMAGE_HEIGHT:
+                    continue
+                if len(img_bytes) < MIN_IMAGE_BYTES:
+                    continue
+                img_ext = base_image.get("ext", "png")
+                images.append({
+                    "id": f"img_{page.number}_{img_index}",
+                    "image_base64": base64.b64encode(img_bytes).decode(),
+                    "image_type": f"image/{img_ext}",
+                    "width": w,
+                    "height": h,
+                })
+            except Exception as e:
+                print(f"Failed to extract image {xref} from page {page.number}: {e}")
+        return images
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    @app.get("/v1/models")
+    def models():
+        return {"object": "list", "data": [{"id": OCR_MODEL, "object": "model"}]}
+
+    @app.post("/v1/image_ocr")
+    async def image_ocr(request: Request):
+        """OCR one already-cropped technical figure without wrapping it in a PDF."""
+        try:
+            body = await request.json()
+            if not isinstance(body, dict):
+                raise ValueError("request body must be an object")
+            image_input = body.get("image") or body.get("image_base64", "")
+            prompt = str(body.get("prompt") or DEFAULT_FIGURE_PROMPT)
+            response_format = validate_response_format(body.get("response_format"))
+            image_bytes = decode_image_input(image_input)
+            result = await asyncio.to_thread(run_image_ocr, image_bytes, prompt, response_format)
+            return JSONResponse(result)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        except Exception as exc:
+            traceback.print_exc()
+            raise HTTPException(status_code=502, detail=str(exc))
+
+    def process_pdf(file_input: str) -> dict:
+        """Run blocking PDF rendering and OCR outside the ASGI event loop."""
+        # Decode input
+        if file_input.startswith("data:"):
+            _, b64data = file_input.split(",", 1)
+            pdf_bytes = base64.b64decode(b64data)
+        elif file_input.startswith("http"):
+            r = http_requests.get(file_input, timeout=60)
+            r.raise_for_status()
+            pdf_bytes = r.content
+        else:
+            pdf_bytes = base64.b64decode(file_input)
+
+        # Open PDF with pymupdf
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        print(f"Processing PDF: {doc.page_count} pages")
+
+        pages = []
+        full_text_parts = []
+
+        for page_num in range(doc.page_count):
+            page = doc[page_num]
+
+            # Render page to PNG for OCR
+            pix = page.get_pixmap(dpi=200)
+            page_png = pix.tobytes("png")
+
+            # OCR the page image via GLM-OCR vLLM
+            page_text = ocr_single_page(page_png)
+
+            # Extract embedded images from page
+            page_images = extract_images_from_page(page)
+
+            # Build markdown with image references
+            markdown = page_text
+            for img in page_images:
+                markdown += f'\n\n![{img["id"]}]({img["id"]}.{img["image_type"].split("/")[-1]})'
+
+            pages.append({
+                "index": page_num,
+                "markdown": markdown,
+                "text": page_text,
+                "images": page_images,
+                "page_number": page_num + 1,
+            })
+            full_text_parts.append(page_text)
+            print(f"  Page {page_num + 1}/{doc.page_count}: {len(page_text)} chars, {len(page_images)} images")
+
+        doc.close()
+
+        return {
+            "model": "GLM-OCR",
+            "pages": pages,
+            "text": "\n\n".join(full_text_parts),
+            "data_info": {"num_pages": len(pages)},
+        }
+
+    @app.post("/v1/layout_parsing")
+    async def layout_parsing(request: Request):
+        """
+        PDF → structured OCR with text + images.
+
+        Accepts:
+          {"model": "glm-ocr", "file": "data:application/pdf;base64,..."}
+          {"model": "glm-ocr", "file_base64": "..."}
+
+        Returns Mistral-compatible format:
+          {"pages": [{"markdown": "...", "images": [...], "page_number": 1}], ...}
+        """
+        try:
+            body = await request.json()
+            file_input = body.get("file") or body.get("file_base64", "")
+            result = await asyncio.to_thread(process_pdf, file_input)
+            return JSONResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
+
+    if __name__ == "__main__":
+        port = int(os.environ.get("GLMOCR_PORT", 5002))
+        uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,0 +1,14 @@
+apiVersion: v2
+appVersion: 0.5.4
+description: Helm chart for deploying ChromaDB
+keywords:
+- vectordb
+- chromadb
+- embeddings
+- ai-apps
+- rag
+name: chromadb
+sources:
+- https://github.com/chroma-core/chroma
+type: application
+version: 0.1.3

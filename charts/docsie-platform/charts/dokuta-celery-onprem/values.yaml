@@ -1,0 +1,305 @@
+# Vendored from external/docsie-helm-charts/dokuta/on-prem/celery for docsie-platform.
+# Normalizations: credentialed URLs consumed from the platform-generated secrets
+# (docsie-platform-secrets / docsie-platform-derived); other config keys are read
+# from dokuta-secret, whose endpoint keys are derived by the dokuta-onprem chart;
+# customer-prefixed image tag replaced with a neutral release tag; workloads
+# renamed celery -> dokuta-celery to avoid colliding with Docsie's own celery.
+nameOverride: dokuta-celery
+fullnameOverride: dokuta-celery
+
+replicaCount: 2
+
+image:
+  repository: docsie/dokuta-celery
+  # TODO(onprem-bundle): build/retag multi-arch as docsie/dokuta-celery:onprem-0.1.0
+  tag: "onprem-0.1.0"
+  pullPolicy: IfNotPresent
+
+# Airgapped installs import images into containerd; no pull secret by default.
+# global.imagePullSecret is appended automatically when set.
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+env:
+  OPENAI_IMAGE_GENERATION_MODEL:
+    secretName: dokuta-secret
+    key: openaiimagegenerationmodel
+  THEME_URL:
+    secretName: dokuta-secret
+    key: themeurl
+  REDIS_HOST:
+    secretName: dokuta-secret
+    key: redishost
+  REDIS_PORT:
+    secretName: dokuta-secret
+    key: redisport
+  REDIS_DB:
+    secretName: dokuta-secret
+    key: redisdb
+  REDIS_PASSWORD:
+    secretName: docsie-platform-secrets
+    key: REDIS_PASSWORD
+  REDIS_URL:
+    secretName: docsie-platform-derived
+    key: DOKUTA_REDIS_URL
+  CELERY_BROKER_URL:
+    secretName: docsie-platform-derived
+    key: DOKUTA_CELERY_BROKER_URL
+  POSTGRES_URI:
+    secretName: docsie-platform-derived
+    key: DOKUTA_POSTGRES_URI
+  CHROMA_DB_HOST:
+    secretName: dokuta-secret
+    key: chromadbhost
+  CHROMA_DB_PORT:
+    secretName: dokuta-secret
+    key: chromadbport
+  CHROMA_DB_TOKEN:
+    secretName: dokuta-secret
+    key: chromadbtoken
+  PERSISTENCE_BACKEND:
+    secretName: dokuta-secret
+    key: PERSISTENCE_BACKEND
+  STORAGE_BACKEND:
+    secretName: dokuta-secret
+    key: STORAGE_BACKEND
+  S3_ENDPOINT_URL:
+    secretName: dokuta-secret
+    key: S3_ENDPOINT_URL
+  S3_ACCESS_KEY_ID:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_USER
+  S3_SECRET_ACCESS_KEY:
+    secretName: docsie-platform-secrets
+    key: MINIO_ROOT_PASSWORD
+  S3_REGION:
+    secretName: dokuta-secret
+    key: S3_REGION
+  S3_CREATE_BUCKET:
+    secretName: dokuta-secret
+    key: S3_CREATE_BUCKET
+  OPENAI_API_KEY:
+    secretName: dokuta-secret
+    key: OPENAI_API_KEY
+  OPENAI_COMPLETIONS_MODEL_NAME:
+    secretName: dokuta-secret
+    key: openaicompmodelname
+  OPENAI_TRANSCRIPTION_MODEL_NAME:
+    secretName: dokuta-secret
+    key: openaitranmodelname
+  HIX_AI_API_KEY:
+    secretName: dokuta-secret
+    key: hixaiapikey
+  WEBSOCKET_RELAY:
+    secretName: dokuta-secret
+    key: websocketrelay
+  EMBEDDINGS_PROVIDER:
+    secretName: dokuta-secret
+    key: embeddingprovider
+  APIFY_API_TOKEN:
+    secretName: dokuta-secret
+    key: apifyapitoken
+  SERPAPI_KEY:
+    secretName: dokuta-secret
+    key: serpapikey
+  SUPABASE_URL:
+    secretName: dokuta-secret
+    key: supabaseurl
+  SUPABASE_KEY:
+    secretName: dokuta-secret
+    key: supabasekey
+  SUPABASE_SERVICE_KEY:
+    secretName: dokuta-secret
+    key: supabaseservicekey
+  DOCSIE_GENERATE_TMP_URL:
+    secretName: dokuta-secret
+    key: docsiegeneratetmpurl
+  DOCSIE_IMPORT_MD_URL:
+    secretName: dokuta-secret
+    key: docsieimportmdurl
+  DOCSIE_UPLOAD_URL:
+    secretName: dokuta-secret
+    key: docsieuploadurl
+  AUTH_BASE_URL:
+    secretName: dokuta-secret
+    key: authbaseurl
+  AUTH_CLIENT_ID:
+    secretName: dokuta-secret
+    key: authclientid
+  AUTH_CLIENT_SECRET:
+    secretName: dokuta-secret
+    key: authclientsecret
+  AUTH_MANAGEMENT_CLIENT_ID:
+    secretName: dokuta-secret
+    key: authmanagmentclientid
+  AUTH_MANAGEMENT_CLIENT_SECRET:
+    secretName: dokuta-secret
+    key: authmanagmentclientsecret
+  AUTH_REDIRECT_URI:
+    secretName: dokuta-secret
+    key: authredirecturi
+  AUTH_OPENID_CONF_ENDPOINT:
+    secretName: dokuta-secret
+    key: authopenidconfendpoint
+  AZURE_OPENAI_API_KEY:
+    secretName: dokuta-secret
+    key: azureopenaiapikey
+  AZURE_OPENAI_ENDPOINT:
+    secretName: dokuta-secret
+    key: azureopenaiendpoint
+  SERVER_BASE_URL:
+    secretName: dokuta-secret
+    key: SERVER_BASE_URL
+  MONGO_DB_HOST:
+    secretName: dokuta-secret
+    key: MONGO_DB_HOST
+  MONGO_DB_PORT:
+    secretName: dokuta-secret
+    key: MONGO_DB_PORT
+  MONGO_DB_USERNAME:
+    secretName: dokuta-secret
+    key: MONGO_DB_USERNAME
+  MONGO_DB_PASSWORD:
+    secretName: dokuta-secret
+    key: MONGO_DB_PASSWORD
+  MONGO_DB_NAME:
+    secretName: dokuta-secret
+    key: MONGO_DB_NAME
+  MONGO_CALL_COLLECTION_NAME:
+    secretName: dokuta-secret
+    key: MONGO_CALL_COLLECTION_NAME
+  RECALL_TOKEN:
+    secretName: dokuta-secret
+    key: RECALL_TOKEN
+  RECALL_API_KEY:
+    secretName: dokuta-secret
+    key: RECALL_API_KEY
+  API_SERVICE_DOMAIN:
+    secretName: dokuta-secret
+    key: API_SERVICE_DOMAIN
+  FUSIONAUTH_API_KEY:
+    secretName: dokuta-secret
+    key: FUSIONAUTH_API_KEY
+  FUSIONAUTH_BASE_URL:
+    secretName: dokuta-secret
+    key: FUSIONAUTH_BASE_URL
+  FUSIONAUTH_CLIENT_ID:
+    secretName: dokuta-secret
+    key: FUSIONAUTH_CLIENT_ID
+  FUSIONAUTH_CLIENT_SECRET:
+    secretName: dokuta-secret
+    key: FUSIONAUTH_CLIENT_SECRET
+  FUSIONAUTH_REDIRECT_URI:
+    secretName: dokuta-secret
+    key: FUSIONAUTH_REDIRECT_URI
+  GOOGLE_GEMINI_API_KEY:
+    secretName: dokuta-secret
+    key: GOOGLE_GEMINI_API_KEY
+  GOOGLE_VEO_MODEL_NAME:
+    secretName: dokuta-secret
+    key: GOOGLE_VEO_MODEL_NAME
+  DOCSIE_WEBHOOK_KEY:
+    secretName: dokuta-secret
+    key: DOCSIE_WEBHOOK_KEY
+  DOKUTA_ANNOTATION_LLM_PROVIDER:
+    secretName: dokuta-secret
+    key: DOKUTA_ANNOTATION_LLM_PROVIDER
+  DOKUTA_ANNOTATION_LLM_BASE_URL:
+    secretName: dokuta-secret
+    key: DOKUTA_ANNOTATION_LLM_BASE_URL
+  DOKUTA_ANNOTATION_LLM_API_KEY:
+    secretName: dokuta-secret
+    key: DOKUTA_ANNOTATION_LLM_API_KEY
+  DOKUTA_ANNOTATION_LLM_VISION_MODEL:
+    secretName: dokuta-secret
+    key: DOKUTA_ANNOTATION_LLM_VISION_MODEL
+  CHUNK_FRAME_CAP:
+    secretName: dokuta-secret
+    key: CHUNK_FRAME_CAP
+  DOKUTA_STRUCTURED_CHUNK_FRAME_CAP:
+    secretName: dokuta-secret
+    key: DOKUTA_STRUCTURED_CHUNK_FRAME_CAP
+  DOKUTA_STRUCTURED_GUIDE_VISION_CONCURRENCY:
+    secretName: dokuta-secret
+    key: DOKUTA_STRUCTURED_GUIDE_VISION_CONCURRENCY
+  DOKUTA_API_STRICT_OPTIONAL_IMPORTS:
+    secretName: dokuta-secret
+    key: DOKUTA_API_STRICT_OPTIONAL_IMPORTS
+  DOKUTA_ENABLE_REALTIME_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_REALTIME_API
+  DOKUTA_ENABLE_AVATARS_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_AVATARS_API
+  DOKUTA_ENABLE_VOICE_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_VOICE_API
+  DOKUTA_ENABLE_VOICE_AGENT_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_VOICE_AGENT_API
+  DOKUTA_ENABLE_VOICE_LIVEKIT_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_VOICE_LIVEKIT_API
+  DOKUTA_ENABLE_TRANSCRIPTION_API:
+    secretName: dokuta-secret
+    key: DOKUTA_ENABLE_TRANSCRIPTION_API
+  DOKUTA_PUBLIC_BASE_URL:
+    secretName: dokuta-secret
+    key: DOKUTA_PUBLIC_BASE_URL
+  SENTRY_DSN:
+    secretName: dokuta-secret
+    key: SENTRY_DSN
+  SENTRY_ENVIRONMENT:
+    secretName: dokuta-secret
+    key: SENTRY_ENVIRONMENT
+  SENTRY_TRACES_SAMPLE_RATE:
+    secretName: dokuta-secret
+    key: SENTRY_TRACES_SAMPLE_RATE
+  SENTRY_PROFILES_SAMPLE_RATE:
+    secretName: dokuta-secret
+    key: SENTRY_PROFILES_SAMPLE_RATE
+
+llmEnv:
+  enabled: true
+  secretName: dokuta-secret
+  optional: true
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: "3"
+    memory: 5Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+nodeSelector: {}
+tolerations: []
+affinity: {}

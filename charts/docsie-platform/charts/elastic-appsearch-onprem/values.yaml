@@ -1,0 +1,54 @@
+# Vendored from external/docsie-helm-charts/onprem/elastic-appsearch for docsie-platform.
+# Normalizations: hardcoded `elastic` namespace removed (everything installs into
+# the release namespace); externalUrl defaults to the same-namespace ECK service.
+#
+# TODO(onprem-bundle): this chart only creates ECK custom resources. The ECK
+# operator (elastic-operator) is an UNMODELED dependency — its images and CRDs
+# must be added to the bundle (or App Search replaced by the plain
+# Elasticsearch index path, see ONPREM_INSTALLER_DESIGN.md open decision 3).
+elasticsearch:
+  enabled: true
+  name: production
+  version: 8.12.0
+  count: 1
+  storage: 20Gi
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 500m
+    limits:
+      memory: 2Gi
+      cpu: "1"
+
+enterpriseSearch:
+  enabled: true
+  name: production
+  version: 8.6.2
+  count: 1
+  # Empty = same-namespace ECK service URL https://<name>-ent-http:3002
+  externalUrl: ""
+  documentSizeLimit: 500kb
+  sourceEnginesPerMetaEngineLimit: 500
+  javaOpts: "-Xms2g -Xmx2g"
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 500m
+    limits:
+      memory: 3Gi
+      cpu: "1"
+
+kibana:
+  enabled: false
+  name: production
+  version: 8.6.2
+  count: 1
+  publicBaseUrl: http://localhost:5601
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: "1"
+

@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "whisper-openai-adapter.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      enableServiceLinks: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: install-deps
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              pip install --no-cache-dir -r /app/config/requirements.txt -t /app/packages
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: packages
+              mountPath: /app/packages
+          resources:
+            {{- toYaml .Values.initResources | nindent 12 }}
+      containers:
+        - name: whisper-openai-adapter
+          image: "{{ with ((.Values.global | default dict).imageRegistry) }}{{ . }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              export PYTHONPATH=/app/packages:$PYTHONPATH
+              export PATH=/app/packages/bin:$PATH
+              python /app/config/server.py
+          ports:
+            - name: http
+              containerPort: {{ .Values.env.WHISPER_ADAPTER_PORT | int }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretEnv.existingSecret | default (printf "%s-secret" (include "whisper-openai-adapter.fullname" $)) }}
+                  key: GROQ_API_KEY
+            {{- if .Values.auth.enabled }}
+            - name: ADAPTER_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secretEnv.existingSecret | default (printf "%s-secret" (include "whisper-openai-adapter.fullname" $)) }}
+                  key: ADAPTER_API_TOKEN
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+            - name: packages
+              mountPath: /app/packages
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "whisper-openai-adapter.fullname" . }}-config
+        - name: packages
+          emptyDir: {}
