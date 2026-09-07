@@ -14,7 +14,13 @@ values=$3
 for tool in helm kubectl; do command -v "$tool" >/dev/null; done
 kubectl --kubeconfig "$config" get --raw=/readyz >/dev/null
 helm dependency build "$ROOT/charts/docsie-platform" --skip-refresh
+# Inspect the effective rendered profile without writing generated Secrets to disk.
+if helm template docsie "$ROOT/charts/docsie-platform" --namespace "$namespace" --values "$values" | \
+    awk '/^kind: EnterpriseSearch$/ {found=1} END {exit !found}'; then
+  bash "$ROOT/scripts/ensure-search-operator.sh" "$config"
+fi
 helm upgrade --install docsie "$ROOT/charts/docsie-platform" \
   --kubeconfig "$config" --namespace "$namespace" --create-namespace \
-  --values "$values" --wait --timeout 20m
+  --values "$values" --wait --wait-for-jobs --timeout 20m
+helm test docsie --filter name=docsie-search-test --kubeconfig "$config" --namespace "$namespace" --logs --timeout 3m
 kubectl --kubeconfig "$config" --namespace "$namespace" get pods

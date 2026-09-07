@@ -33,6 +33,14 @@ storage:
     enabled: true
 
 global:
+  appSearch:
+    # Required for normal Docsie search. Disable only when supplying external search.
+    enabled: true
+    serviceName: production-ent-http
+    caSecretName: production-ent-http-certs-public
+    # Browser-reachable TLS endpoint, including /api/as/v1; no scheme.
+    # Empty defaults to search.<global.hostname>/api/as/v1.
+    publicHost: ""
   selfHosted: true
   scheme: https
   # Public hostname of this install (portal + app). Subcharts derive their own

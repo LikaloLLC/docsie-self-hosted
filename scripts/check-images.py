@@ -2,9 +2,12 @@
 """Check every rendered runtime image before creating billable infrastructure."""
 import argparse
 import json
+from pathlib import Path
 import re
 import subprocess
 import sys
+
+import yaml
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('chart')
@@ -15,7 +18,25 @@ command = ['helm', 'template', 'docsie-preflight', args.chart]
 for values in args.values:
     command += ['-f', values]
 rendered = subprocess.run(command, check=True, capture_output=True, text=True).stdout
-images = sorted(set(re.findall(r'^\s+image:\s*["\']?([^\s"\']+)', rendered, re.MULTILINE)))
+if re.search(r'^kind: EnterpriseSearch$', rendered, re.MULTILINE):
+    operator_chart = Path(__file__).resolve().parents[1] / 'charts/prerequisites/eck-operator'
+    rendered += subprocess.run(['helm', 'template', 'docsie-elastic-operator', str(operator_chart)],
+                               check=True, capture_output=True, text=True).stdout
+def image_references(node):
+    # CRD schemas contain an `image:` property whose value is a schema mapping,
+    # not a container reference. Parse YAML rather than matching those as text.
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == 'image' and isinstance(value, str) and value.strip():
+                yield value
+            else:
+                yield from image_references(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from image_references(value)
+
+
+images = sorted({image for doc in yaml.safe_load_all(rendered) for image in image_references(doc)})
 if not images:
     sys.exit('No runtime images were rendered')
 failed = False

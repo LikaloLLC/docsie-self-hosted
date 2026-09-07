@@ -1,0 +1,94 @@
+{{- $name := printf "%s-appsearch-bootstrap" .Release.Name }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $name }}
+rules:
+  # Kubernetes cannot restrict create by resourceNames. This short-lived job
+  # receives no list, update, delete or access to other existing Secrets.
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [secrets]
+    resourceNames: [{{ printf "%s-appsearch-runtime" .Release.Name | quote }}]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+data:
+  bootstrap.py: |
+{{ .Files.Get "files/bootstrap.py" | indent 4 }}
+---
+# A regular Job, not a post-install hook: application containers wait for its
+# Secret while Helm --wait runs. A hook would deadlock that initial install.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}-{{ .Release.Revision }}
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: {{ .Values.bootstrap.timeoutSeconds }}
+  template:
+    spec:
+      enableServiceLinks: false
+      serviceAccountName: {{ $name }}
+      restartPolicy: Never
+      {{- with .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ . | quote }}
+      {{- end }}
+      containers:
+        - name: bootstrap
+          image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ end }}{{ .Values.bootstrap.image }}"
+          command: [python, /bootstrap/bootstrap.py]
+          env:
+            - name: APPSEARCH_URL
+              value: {{ printf "https://%s-ent-http:3002/api/as/v1" .Values.enterpriseSearch.name | quote }}
+            - name: RUNTIME_SECRET
+              value: {{ printf "%s-appsearch-runtime" .Release.Name | quote }}
+            - name: TIMEOUT_SECONDS
+              value: {{ .Values.bootstrap.timeoutSeconds | quote }}
+          volumeMounts:
+            - name: script
+              mountPath: /bootstrap
+              readOnly: true
+            - name: tls
+              mountPath: /search-tls
+              readOnly: true
+            - name: auth
+              mountPath: /search-auth
+              readOnly: true
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: '1', memory: 128Mi}
+      volumes:
+        - name: script
+          configMap:
+            name: {{ $name }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.enterpriseSearch.name }}-ent-http-certs-public
+        - name: auth
+          secret:
+            secretName: {{ .Values.elasticsearch.name }}-es-elastic-user

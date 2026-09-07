@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-search-test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  enableServiceLinks: false
+  restartPolicy: Never
+  {{- with .Values.global.imagePullSecret }}
+  imagePullSecrets:
+    - name: {{ . | quote }}
+  {{- end }}
+  containers:
+    - name: verify
+      image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ end }}{{ .Values.bootstrap.image }}"
+      command:
+        - python
+        - -c
+        - |
+{{ .Files.Get "files/verify.py" | indent 10 }}
+      env:
+        - name: APPSEARCH_URL
+          value: {{ printf "https://%s-ent-http:3002/api/as/v1" .Values.enterpriseSearch.name | quote }}
+      envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-appsearch-runtime
+      volumeMounts:
+        - name: tls
+          mountPath: /search-tls
+          readOnly: true
+      resources:
+        requests: {cpu: 25m, memory: 32Mi}
+        limits: {cpu: '1', memory: 128Mi}
+  volumes:
+    - name: tls
+      secret:
+        secretName: {{ .Values.enterpriseSearch.name }}-ent-http-certs-public

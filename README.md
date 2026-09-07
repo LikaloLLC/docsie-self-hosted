@@ -212,6 +212,12 @@ install and verify the result. [Use-case procedures](docs/INSTALL_BY_USE_CASE.md
 map outcomes to dependencies and acceptance checks. Multiple use cases should
 share one Docsie installation where appropriate.
 
+## Search is included
+
+Chart `0.2.0-preview.4` includes App Search in the basic KB install, with a vendored
+Elastic operator, automatic credentials and an indexing/search installation test.
+[Search setup and browser access](docs/SEARCH.md).
+
 ## System requirements and costs
 
 Size the application separately from the model runtimes. Read the
@@ -220,6 +226,7 @@ hosted versus local AI, Groq transcription, TTS pricing and a monthly cost works
 
 | Evaluation setup | Starting point |
 | --- | --- |
+| Hobby/basic KB | Prior slim installation ran in an 8-GiB VM **without App Search validation**; target 16 GiB initially with bundled App Search, pending minimum-footprint testing. Ollama model memory is additional. |
 | Full application profile with external inference | **Planning estimate:** 16 vCPU, 64 GiB RAM and 400 GB SSD working capacity; add retained data and backups |
 | Local AI | Add a separately sized model host; model memory, context and concurrency determine capacity |
 | Kubernetes | Reachable cluster, persistent storage, Helm 3, kubectl, configured hostname/storage and access to every required image |

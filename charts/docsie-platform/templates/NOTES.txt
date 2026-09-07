@@ -7,6 +7,11 @@ Profiles enabled:
   full:  {{ .Values.profiles.full }}
 
 Public hostname: {{ .Values.global.hostname }}
+Bundled App Search: {{ .Values.global.appSearch.enabled }}
+{{- if .Values.global.appSearch.enabled }}
+Browser search endpoint: https://{{ .Values.global.appSearch.publicHost | default (printf "search.%s/api/as/v1" .Values.global.hostname) }}
+Configure DNS/TLS/ingress for this endpoint before sharing a portal (docs/SEARCH.md).
+{{- end }}
 Model endpoint:  {{ .Values.global.modelEndpoint | default "(not set — AI features degraded)" }}
 
 Credentials were generated into the `docsie-platform-secrets` /

@@ -4,6 +4,7 @@ kind: Kibana
 metadata:
   name: {{ .Values.kibana.name }}
 spec:
+  image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ else }}docker.elastic.co/{{ end }}kibana/kibana:{{ .Values.kibana.version }}"
   version: {{ .Values.kibana.version | quote }}
   count: {{ .Values.kibana.count }}
   elasticsearchRef:

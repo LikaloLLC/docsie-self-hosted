@@ -1,6 +1,8 @@
 # Existing Linux Kubernetes cluster; operator supplies registry access and TLS.
 global:
   hostname: docs.internal.example.com
+  appSearch:
+    publicHost: search.docs.internal.example.com/api/as/v1
   scheme: https
   imagePullSecret: docsie-registry
   imagePullSecrets:
@@ -9,3 +11,11 @@ profiles:
   kb: true
   kbAi: false
   full: false
+
+# Configure browser access with your ingress controller and certificate.
+# See docs/SEARCH.md. Backend search and its installation test need no ingress.
+elastic-appsearch-onprem:
+  ingress:
+    enabled: false
+    className: nginx
+    tlsSecretName: docsie-search-tls

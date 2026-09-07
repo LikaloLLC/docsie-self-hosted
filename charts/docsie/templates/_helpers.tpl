@@ -24,8 +24,14 @@ Resolve the ServiceAccount name
 Optional config mounts shared by all Docsie workloads.
 */}}
 {{- define "docsie.configVolumeMounts" -}}
-{{- if or .Values.mongo.caSecretName .Values.onpremSettings.configMapName .Values.workload.extraVolumeMounts }}
+{{- $search := .Values.global.appSearch | default dict }}
+{{- if or $search.enabled .Values.mongo.caSecretName .Values.onpremSettings.configMapName .Values.workload.extraVolumeMounts }}
 volumeMounts:
+{{- if $search.enabled }}
+  - name: appsearch-ca
+    mountPath: /etc/docsie/appsearch-ca
+    readOnly: true
+{{- end }}
 {{- if .Values.mongo.caSecretName }}
   - name: mongo-ca
     mountPath: {{ .Values.mongo.caMountPath }}
@@ -50,8 +56,14 @@ volumeMounts:
 {{- end -}}
 
 {{- define "docsie.configVolumes" -}}
-{{- if or .Values.mongo.caSecretName .Values.onpremSettings.configMapName .Values.workload.extraVolumes }}
+{{- $search := .Values.global.appSearch | default dict }}
+{{- if or $search.enabled .Values.mongo.caSecretName .Values.onpremSettings.configMapName .Values.workload.extraVolumes }}
 volumes:
+{{- if $search.enabled }}
+  - name: appsearch-ca
+    secret:
+      secretName: {{ $search.caSecretName | quote }}
+{{- end }}
 {{- if .Values.mongo.caSecretName }}
   - name: mongo-ca
     secret:
@@ -121,6 +133,20 @@ are empty. Call with (dict "root" $ "component" <componentValues>).
 {{- $plainEnv = merge $plainEnv $defaults }}
 {{- end }}
 {{- $secretEnv := merge (deepCopy (default (dict) $component.env)) (default (dict) $root.Values.env) -}}
+{{- $search := $root.Values.global.appSearch | default dict }}
+{{- if $search.enabled }}
+{{- $publicHost := $search.publicHost | default (printf "search.%s/api/as/v1" $root.Values.global.hostname) }}
+{{- $plainEnv = merge $plainEnv (dict
+  "APPSEARCH_HOST" (printf "%s:3002/api/as/v1" $search.serviceName)
+  "APPSEARCH_SEARCH_HOST" $publicHost
+  "APPSEARCH_USE_HTTPS" "true"
+  "APPSEARCH_VERIFY_CERTS" "true"
+  "APPSEARCH_CA_CERT_PATH" "/etc/docsie/appsearch-ca/tls.crt"
+  "APPSEARCH_SEARCH_KEY_NAME" "docsie-search-signing") }}
+{{- range $key := list "APPSEARCH_KEY" "APPSEARCH_SEARCH_KEY" }}
+{{- $_ := set $secretEnv $key (dict "secretName" (printf "%s-appsearch-runtime" $root.Release.Name) "key" $key) }}
+{{- end }}
+{{- end }}
 {{- $extraEnv := concat (default (list) $root.Values.workload.extraEnv) (default (list) $component.extraEnv) -}}
 {{- if or $plainEnv $secretEnv $extraEnv -}}
 env:

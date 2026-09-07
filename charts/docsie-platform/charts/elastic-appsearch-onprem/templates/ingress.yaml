@@ -1,0 +1,26 @@
+{{- if .Values.ingress.enabled }}
+{{- $public := .Values.global.appSearch.publicHost | default (printf "search.%s/api/as/v1" .Values.global.hostname) }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-appsearch
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts: [{{ (splitList "/" $public | first) | quote }}]
+      secretName: {{ required "App Search ingress requires ingress.tlsSecretName" .Values.ingress.tlsSecretName }}
+  rules:
+    - host: {{ (splitList "/" $public | first) | quote }}
+      http:
+        paths:
+          - path: /api/as/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.enterpriseSearch.name }}-ent-http
+                port:
+                  number: 3002
+{{- end }}

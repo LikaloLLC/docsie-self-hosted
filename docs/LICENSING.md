@@ -25,3 +25,7 @@ The preview image does not include the new offline-license enforcement work.
 License terms still apply. Request image credentials and evaluation terms from
 Docsie; do not enable enforcement settings or assume an activation command is
 available until the supplied image documents that capability.
+
+## Third-party search components
+
+The vendored Elastic operator includes its upstream [Elastic License 2.0](../charts/prerequisites/eck-operator/LICENSE). Elastic container images retain their upstream licenses; the Docsie application license does not replace them.

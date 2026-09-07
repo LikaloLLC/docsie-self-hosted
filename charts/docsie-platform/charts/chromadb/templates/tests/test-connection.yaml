@@ -6,10 +6,11 @@ metadata:
     {{- include "chromadb.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   containers:
     - name: wget
-      image: busybox
+      image: busybox:1.36.1
       command: ['wget']
-      args: ['{{ include "chromadb.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "chromadb.fullname" . }}:{{ .Values.service.port }}/api/v1/heartbeat']
   restartPolicy: Never

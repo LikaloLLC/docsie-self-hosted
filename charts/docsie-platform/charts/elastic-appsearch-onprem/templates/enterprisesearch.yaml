@@ -4,6 +4,7 @@ kind: EnterpriseSearch
 metadata:
   name: {{ .Values.enterpriseSearch.name }}
 spec:
+  image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ else }}docker.elastic.co/{{ end }}enterprise-search/enterprise-search:{{ .Values.enterpriseSearch.version }}"
   version: {{ .Values.enterpriseSearch.version | quote }}
   count: {{ .Values.enterpriseSearch.count }}
   elasticsearchRef:

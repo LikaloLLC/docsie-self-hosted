@@ -78,9 +78,9 @@ silently or claim that enabling a feature flag installs its backend.
 4. Ask a question answered by a known source document and inspect the answer and
    references. Also exercise writing assistance if that is a requested outcome.
 
-Do not enable `profiles.kbAi` automatically: inspect whether the chosen retrieval
-configuration needs App Search and its ECK operator. General model configuration
-and this chart dependency are distinct.
+The basic install already includes App Search and its operator prerequisite.
+Complete [search verification and browser routing](SEARCH.md) before claiming
+retrieval is ready; model connectivity alone does not prove search works.
 
 ### Video-to-docs
 

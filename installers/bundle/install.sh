@@ -164,13 +164,26 @@ helm_install() {
 
   log "Installing chart ${chart} (profile: ${PROFILE}) into ${NAMESPACE}/${RELEASE}..."
   if [[ -d "$chart" ]]; then helm dependency build "$chart" >/dev/null; fi
+  if helm template "${RELEASE}" "${chart}" "${set_flags[@]}" ${values_flags[@]+"${values_flags[@]}"} | \
+      awk '/^kind: EnterpriseSearch$/ {found=1} END {exit !found}'; then
+    if ! kubectl get crd enterprisesearches.enterprisesearch.k8s.elastic.co >/dev/null 2>&1; then
+      if kubectl get crd elasticsearches.elasticsearch.k8s.elastic.co >/dev/null 2>&1; then
+        fail "Existing Elastic installation lacks Enterprise Search CRDs; configure its operator first."
+      fi
+      local operator_chart="${BUNDLE_ROOT}/charts/eck-operator-2.16.1.tgz"
+      [[ -f "$operator_chart" ]] || fail "Bundle must include charts/eck-operator-2.16.1.tgz and its container image."
+      helm upgrade --install docsie-elastic-operator "$operator_chart" \
+        --namespace docsie-system --create-namespace --wait --timeout 5m
+    fi
+  fi
   helm upgrade --install "${RELEASE}" "${chart}" \
     --namespace "${NAMESPACE}" --create-namespace \
     "${set_flags[@]}" \
     ${values_flags[@]+"${values_flags[@]}"} \
-    --wait --timeout 20m
+    --wait --wait-for-jobs --timeout 20m
   kubectl -n "$NAMESPACE" exec deployment/docsie-web -- python manage.py migrate --noinput
-  log "Helm release deployed; migrations completed."
+  helm test "${RELEASE}" --filter "name=${RELEASE}-search-test" --namespace "$NAMESPACE" --logs --timeout 3m
+  log "Helm release deployed; migrations and search test completed."
 }
 
 ensure_k3s

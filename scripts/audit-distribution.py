@@ -30,6 +30,12 @@ for path in root.rglob('*'):
             or 'generated' in relative.parts or path.name in {'license.json', 'values.staging.yaml', 'values.prod.yaml'}):
         failures.append(f'{relative}: private/runtime file')
         continue
+    # Previously reviewed product screenshots are expected binary assets;
+    # textual credential scanning cannot assess their visual redaction.
+    if relative.parent == Path('docs/assets/screenshots') and path.suffix == '.png':
+        if not path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+            failures.append(f'{relative}: invalid PNG asset')
+        continue
     try:
         contents = path.read_text()
     except UnicodeDecodeError:

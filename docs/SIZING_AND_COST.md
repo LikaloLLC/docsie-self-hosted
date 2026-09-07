@@ -16,6 +16,7 @@ Hosted transcription does not eliminate video decoding, frame extraction or docu
 
 | Reference | Application footprint | Model footprint | How to use it |
 | --- | --- | --- | --- |
+| Hobby/basic KB with external inference | Prior slim basic installation ran in an **8-GiB VM**, excluding App Search/AI acceptance; **4 CPU cores and 16 GiB RAM** is an initial test target with bundled App Search | Ollama/model memory is additional if on this same host | Neither a benchmarked minimum nor an enterprise requirement; see [search packaging](SEARCH.md) |
 | Controlled full-profile pilot: **planning estimate** | Start evaluation around **16 vCPU, 64 GiB RAM, 400 GB SSD working capacity**; add retained media, indexes and backups separately | Hosted inference or a separate model host | Validate at bounded concurrency; not a measured minimum or user-count guarantee |
 | Recorded workstation evaluation | Linux ARM64 VM with **16 vCPU, about 92 GiB RAM visible and a 400 GB virtual disk** | Native inference on a **256-GB unified-memory workstation** | Historical configuration, not proof that every model must fit concurrently or that this hardware is required |
 | Enterprise private-cloud design reference | **72–84 vCPU / 336 GiB** across separate system, application, processing and data pools; managed database/cache services additional | Managed text/vision/embeddings plus optional private GPU services | A deliberately provisioned enterprise design, not a baseline for a small installation |

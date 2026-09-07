@@ -56,3 +56,5 @@ and LiveKit voice-worker integration, are still packaging work.
 an offline bundle of images, dependencies and models.
 
 **Is AWS one-click ready?** No. AWS provisioning is a separate roadmap item.
+
+- [Search installation and verification](SEARCH.md) — bundled App Search, credentials and browser endpoint.

@@ -1,5 +1,7 @@
 # Isolated Docker/k3s rehearsal; never a production sizing recommendation.
 global:
+  appSearch:
+    enabled: false  # Historical basic-KB rehearsal; search was not verified.
   hostname: localhost
   scheme: http
 docsie:

@@ -77,6 +77,40 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(key["valueFrom"]["secretKeyRef"],
                          {"name": "docsie-platform-secrets", "key": "DOKUTA_SERVICE_API_KEY"})
 
+    def test_baseline_packages_and_wires_authenticated_app_search(self):
+        docs = self.render({})
+        resources = {(d['kind'], d['metadata']['name']): d for d in docs}
+        self.assertIn(('EnterpriseSearch', 'production'), resources)
+        self.assertIn(('Elasticsearch', 'production'), resources)
+        bootstrap = resources[('Job', 'docsie-appsearch-bootstrap-1')]
+        self.assertNotIn('helm.sh/hook', bootstrap['metadata'].get('annotations', {}))
+        app = resources[('Deployment', 'docsie-web')]['spec']['template']['spec']
+        env = {item['name']: item for item in app['containers'][0]['env']}
+        self.assertEqual(env['APPSEARCH_HOST']['value'], 'production-ent-http:3002/api/as/v1')
+        self.assertEqual(env['APPSEARCH_VERIFY_CERTS']['value'], 'true')
+        for name in ('APPSEARCH_KEY', 'APPSEARCH_SEARCH_KEY'):
+            self.assertEqual(env[name]['valueFrom']['secretKeyRef']['name'], 'docsie-appsearch-runtime')
+        ca = next(volume for volume in app['volumes'] if volume['name'] == 'appsearch-ca')
+        self.assertEqual(ca['secret']['secretName'], 'production-ent-http-certs-public')
+        self.assertIn(('Pod', 'docsie-search-test'), resources)
+
+    def test_external_search_has_no_local_search_dependencies(self):
+        docs = self.render({'global': {'appSearch': {'enabled': False}}})
+        self.assertFalse(any(doc['kind'] == 'EnterpriseSearch' for doc in docs))
+        web = next(doc for doc in docs if doc['kind'] == 'Deployment' and doc['metadata']['name'] == 'docsie-web')
+        pod = web['spec']['template']['spec']
+        self.assertFalse(any(volume['name'] == 'appsearch-ca' for volume in pod.get('volumes', [])))
+        self.assertFalse(any(entry['name'] == 'APPSEARCH_KEY' for entry in pod['containers'][0]['env']))
+
+    def test_full_profile_mounts_the_claim_it_creates(self):
+        docs = self.render({'profiles': {'full': True}})
+        deployment = next(d for d in docs if d['kind'] == 'Deployment' and d['metadata']['name'] == 'chromadb')
+        pod = deployment['spec']['template']['spec']
+        claim = next(v for v in pod['volumes'] if v['name'] == 'chroma-data')['persistentVolumeClaim']['claimName']
+        self.assertTrue(any(d['kind'] == 'PersistentVolumeClaim' and d['metadata']['name'] == claim for d in docs))
+        mount = next(v for v in pod['containers'][0]['volumeMounts'] if v['name'] == 'chroma-data')
+        self.assertEqual(mount['mountPath'], '/chroma/chroma')
+
     def aws_values(self, public=False):
         outputs = {
             "docsie_domain": {"value": "docs.example.test"},

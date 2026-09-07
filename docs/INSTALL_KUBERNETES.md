@@ -9,11 +9,9 @@ x86_64. See RELEASE_STATUS.md before attempting installation.
 ```bash
 helm dependency build charts/docsie-platform --skip-refresh
 python3 scripts/check-images.py charts/docsie-platform --values examples/local.yaml
-kubectl create namespace docsie
-# Create a docsie-registry pull secret in this namespace using your registry tooling.
-# Edit examples/local.yaml: hostname, TLS and storage configuration.
-helm upgrade --install docsie charts/docsie-platform -n docsie -f examples/local.yaml --wait --timeout 20m
-bash installers/bundle/verify.sh --namespace docsie --release docsie --profile kb
+# Create your registry pull Secret in the explicitly selected namespace.
+# Edit examples/local.yaml: hostname, TLS, storage and browser search endpoint.
+bash scripts/install-kubernetes.sh /absolute/path/to/kubeconfig docsie /absolute/path/to/values.yaml
 ```
 
 The local profile includes PostgreSQL, Redis and MinIO. Their credentials are
@@ -21,7 +19,10 @@ generated on first install and retained across upgrades. Migrations run automati
 and `bootstrap.adminEmail` to provision an initial administrator. Its generated
 password is stored in the `docsie-bootstrap-admin` Secret and is not reset on
 upgrade. Public storage/CDN endpoints and model wiring require your configuration.
-The full profile additionally requires the compatible image set and ECK operator.
+App Search is included in the basic profile. The wrapper installs the vendored
+ECK operator/CRDs if absent, bootstraps credentials, and tests indexing/search.
+Configure the browser search endpoint using [the search guide](SEARCH.md).
+The full profile additionally requires the compatible Dokuta/satellite image set.
 
 ## Offline packaging
 

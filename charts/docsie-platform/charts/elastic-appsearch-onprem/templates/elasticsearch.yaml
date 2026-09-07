@@ -4,6 +4,7 @@ kind: Elasticsearch
 metadata:
   name: {{ .Values.elasticsearch.name }}
 spec:
+  image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ else }}docker.elastic.co/{{ end }}elasticsearch/elasticsearch:{{ .Values.elasticsearch.version }}"
   version: {{ .Values.elasticsearch.version | quote }}
   http:
     service:

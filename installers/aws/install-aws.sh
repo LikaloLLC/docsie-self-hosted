@@ -284,6 +284,8 @@ HELM_ARGS=(upgrade --install "$RELEASE_NAME" "$CHART_REF" -n "$NAMESPACE" -f "$V
 [ -n "$CHART_VERSION" ] && HELM_ARGS+=(--version "$CHART_VERSION")
 [ -n "$EXTRA_VALUES" ]  && HELM_ARGS+=(-f "$EXTRA_VALUES")
 
+bash "${SCRIPT_DIR}/../../scripts/ensure-search-operator.sh" "$KUBECONFIG"
+
 log "Installing Docsie platform chart: ${CHART_REF} ${CHART_VERSION:+(version ${CHART_VERSION})}"
 helm "${HELM_ARGS[@]}"
 

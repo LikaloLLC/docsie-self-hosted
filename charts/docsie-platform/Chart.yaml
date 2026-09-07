@@ -5,13 +5,13 @@ description: >-
   Docsie app chart plus vendored, normalized on-prem subcharts behind three
   profiles (kb, kb-ai, full). See docs/ONPREM_INSTALLER_DESIGN.md §3.
 type: application
-version: 0.2.0-preview.3
+version: 0.2.0-preview.4
 appVersion: "onprem-0.1.0"
 
 dependencies:
   # Exact application chart version; bundled when packaging the release.
   - name: docsie
-    version: "0.3.0-preview.1"
+    version: "0.3.0-preview.2"
     repository: "file://../docsie"
 
   # ---- kb profile (baseline platform, always on unless explicitly disabled)
@@ -32,11 +32,10 @@ dependencies:
   - name: pdf-converter
     version: 0.1.0
 
-  # ---- kb-ai profile (App Search / RAG; requires the ECK operator — see
-  #      charts/elastic-appsearch-onprem/values.yaml TODO)
+  # Search is a baseline requirement. The installer provisions the vendored ECK operator.
   - name: elastic-appsearch-onprem
-    version: 0.1.0
-    condition: profiles.kbAi
+    version: 0.1.1
+    condition: global.appSearch.enabled
 
   # ---- full profile (video-to-docs pipeline and satellites)
   - name: dokuta-onprem
@@ -46,7 +45,7 @@ dependencies:
     version: 0.1.0
     condition: profiles.full
   - name: chromadb
-    version: 0.1.3
+    version: 0.1.4
     condition: profiles.full
   - name: whisper-openai-adapter
     version: 0.1.0

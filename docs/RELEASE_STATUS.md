@@ -1,40 +1,48 @@
-# Docsie Self-Hosted v0.2.0-preview.2
+# Docsie Self-Hosted v0.2.0-preview.4
 
-Dokuta public images are now available for AMD64 and ARM64: see [public image references and overrides](PUBLIC_IMAGES.md). The complete platform image set remains a separate release milestone.
-
-First public Kubernetes chart preview for the proprietary Docsie application.
+This chart preview packages App Search as part of the basic Docsie installation.
+The installer provisions its Elastic operator, creates search credentials and
+runs a real indexing/search check. See [search setup and validation](SEARCH.md).
 
 ## Included
 
-- Application chart `0.3.0-preview.1` and platform chart `0.2.0-preview.1`.
-- PostgreSQL, Redis, MinIO and baseline application services.
-- Automatic migration hook and optional initial administrator bootstrap.
-- Explicit-kubeconfig installer, configuration examples and local-model guide.
-- Versioned chart packages, Helm index and SHA-256 checksums.
+- Application chart `0.3.0-preview.2`, platform chart `0.2.0-preview.4`, and
+  Elastic's operator chart/CRDs `2.16.1` with its upstream license.
+- Elasticsearch and Enterprise Search/App Search `8.12.0`, TLS verification,
+  automatic indexing and read-only signing keys, and a focused Helm search test.
+- PostgreSQL, Redis, MinIO, migration hooks and optional administrator bootstrap.
+- A corrected Chroma persistent-volume mount for the optional full profile.
+- Explicit-kubeconfig installer, configuration guides, chart archives, Helm index
+  and SHA-256 checksums.
 
 ## Validation
 
-Clean local namespace installation completed without manual migrations or chart
-repairs. Administrator API authentication, rendered login, Celery ping, S3
-write/read and upgrade preservation passed. Six chart integration tests passed.
-See [local validation](LOCAL_VALIDATION.md) for environment and image details.
+A fresh isolated search installation, two credential-preserving upgrades,
+indexing, retrieval, signed-filter enforcement and read-only key enforcement
+passed against running services. Docsie's actual application search client
+connected using certificate verification. The existing local Docsie installation
+upgraded successfully through the installer with 18 service pods ready and the
+focused search test passing.
 
-## Before installing
+Thirteen distribution/bootstrap tests, Helm lint, the distribution audit and
+chart packaging passed. Search/operator/bootstrap images support AMD64 and ARM64;
+live search validation used ARM64. The local application image was emulated.
+This is not a fresh full-platform or browser-facing portal acceptance result.
+The earlier basic installation proof is retained in [LOCAL_VALIDATION.md](LOCAL_VALIDATION.md).
 
-Obtain compatible application and converter image access from Docsie and set
-those image references in your values file. The locally tested image set is not
-included in these downloads; default satellite tags are not all published.
-This is a chart preview, not a turnkey public image distribution.
+## Before installing or upgrading
 
-Ollama/local model instructions document configuration, not certified full AI
-workflows. Validate your model's context, tools, vision and embeddings as needed.
-The preview application does not contain new offline license enforcement.
+Compatible application and converter image access is still required. Dokuta's
+public AMD64/ARM64 images are available; see [image references](PUBLIC_IMAGES.md).
+The complete publicly pullable platform image set remains a separate milestone.
+This is a chart preview, not a turnkey public image distribution or offline bundle.
 
-AWS provisioning, offline bundles, full-platform acceptance, backup/restore and
-marketplace listing are not part of this release. Existing AWS scaffolding is
-experimental. Production ingress, TLS, email and model access need configuration.
+Configure browser-reachable search DNS/TLS using [SEARCH.md](SEARCH.md). Existing
+full-profile installations must preserve old Chroma container data before mounting
+its PVC; the guide explains this migration. Back up data and Secrets before upgrades.
+The installer preserves search keys; it does not migrate an external search index.
 
-The initial `v0.2.0-preview.1` tag did not publish a release: an inherited AWS
-Terraform check failed before upload. This release separates chart publication
-from that unfinished AWS validation. Chart versions are unchanged because the
-chart contents are unchanged.
+Ollama/local model instructions describe configuration, not certified AI workflows.
+The preview application does not contain new offline-license enforcement.
+AWS provisioning, full-platform acceptance, backup/restore qualification and
+marketplace listing remain separate work. AWS scaffolding is experimental.

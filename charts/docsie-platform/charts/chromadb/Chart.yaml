@@ -11,4 +11,4 @@ name: chromadb
 sources:
 - https://github.com/chroma-core/chroma
 type: application
-version: 0.1.3
+version: 0.1.4

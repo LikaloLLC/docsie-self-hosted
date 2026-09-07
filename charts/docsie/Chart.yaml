@@ -2,5 +2,5 @@ apiVersion: v2
 name: docsie
 description: Docsie documentation platform - web server, celery workers, and celery beat. Serves both cloud (Doppler secrets) and on-prem/airgapped (manual secrets, staticProxy, workers map) installs.
 type: application
-version: 0.3.0-preview.1
+version: 0.3.0-preview.2
 appVersion: "1.0.0"

@@ -33,8 +33,8 @@ supporting documentation, then improve the source article.
 
 **Installation:** add model access and organization AI routing. Retrieval and
 embeddings need compatible configuration as well as a chat model. See the
-[Ollama guide](LOCAL_MODELS.md). The chart's `kbAi` switch enables a particular
-App Search dependency; it is not a universal switch for every AI feature.
+[Ollama guide](LOCAL_MODELS.md). [App Search](SEARCH.md) is included in the
+basic install; model access and organization AI routing are configured separately.
 
 ## Documentation from videos and existing material
 

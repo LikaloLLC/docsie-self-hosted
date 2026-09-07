@@ -21,6 +21,7 @@ report unbundled components explicitly rather than inventing installation flags.
 - [Ollama walkthrough](docs/LOCAL_MODELS.md): model networking, organization routing,
   administrator login and storage access.
 - [Full-stack validation](docs/FULL_STACK_VALIDATION.md): Dokuta development status.
+- [Search](docs/SEARCH.md): mandatory App Search, operator, keys and browser endpoint.
 - [Licensing](docs/LICENSING.md): application terms.
 
 Check the selected checkout's release status. A newer development chart is not
