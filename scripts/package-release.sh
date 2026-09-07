@@ -9,7 +9,8 @@ mkdir -p dist
 helm dependency build charts/docsie-platform --skip-refresh
 helm package charts/docsie --destination dist
 helm package charts/docsie-platform --destination dist
-helm repo index dist --url https://github.com/LikaloLLC/docsie-self-hosted/releases/download/v0.2.0-preview.2
+RELEASE_TAG=$(python3 -c 'import yaml; print("v" + yaml.safe_load(open("charts/docsie-platform/Chart.yaml"))["version"])')
+helm repo index dist --url "https://github.com/LikaloLLC/docsie-self-hosted/releases/download/$RELEASE_TAG"
 python3 - <<'PY'
 import hashlib
 from pathlib import Path

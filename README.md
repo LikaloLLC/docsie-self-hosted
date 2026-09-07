@@ -68,3 +68,10 @@ bash scripts/package-release.sh
 ```
 
 See [release status](docs/RELEASE_STATUS.md) for the exact verification boundary.
+
+## Unreleased full-stack work
+
+The development chart includes Dokuta bootstrap and configuration repairs from
+a local full-stack rehearsal. See [full-stack validation](docs/FULL_STACK_VALIDATION.md)
+for what passed and the remaining image, audio and licensing gates. This work
+does not change the verification scope of the published release above.

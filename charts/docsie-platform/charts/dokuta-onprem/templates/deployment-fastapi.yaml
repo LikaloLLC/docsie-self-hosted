@@ -17,6 +17,7 @@ spec:
         app.kubernetes.io/name: dokuta-fastapi
         app.kubernetes.io/instance: dokuta
     spec:
+      enableServiceLinks: false
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}
       tolerations:

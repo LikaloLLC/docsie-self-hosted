@@ -36,6 +36,7 @@ spec:
             secretKeyRef:
               name: {{ $value.secretName }}
               key: {{ $value.key }}
+              optional: {{ $value.optional | default false }}
         {{- end }}
         {{- include "celery.llmEnv" . | nindent 8 }}
         resources:

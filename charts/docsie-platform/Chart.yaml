@@ -5,7 +5,7 @@ description: >-
   Docsie app chart plus vendored, normalized on-prem subcharts behind three
   profiles (kb, kb-ai, full). See docs/ONPREM_INSTALLER_DESIGN.md §3.
 type: application
-version: 0.2.0-preview.1
+version: 0.2.0-preview.3
 appVersion: "onprem-0.1.0"
 
 dependencies:

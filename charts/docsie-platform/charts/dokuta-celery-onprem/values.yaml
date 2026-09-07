@@ -219,12 +219,15 @@ env:
   CHUNK_FRAME_CAP:
     secretName: dokuta-secret
     key: CHUNK_FRAME_CAP
+    optional: true
   DOKUTA_STRUCTURED_CHUNK_FRAME_CAP:
     secretName: dokuta-secret
     key: DOKUTA_STRUCTURED_CHUNK_FRAME_CAP
+    optional: true
   DOKUTA_STRUCTURED_GUIDE_VISION_CONCURRENCY:
     secretName: dokuta-secret
     key: DOKUTA_STRUCTURED_GUIDE_VISION_CONCURRENCY
+    optional: true
   DOKUTA_API_STRICT_OPTIONAL_IMPORTS:
     secretName: dokuta-secret
     key: DOKUTA_API_STRICT_OPTIONAL_IMPORTS

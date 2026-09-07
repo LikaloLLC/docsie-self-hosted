@@ -1,0 +1,78 @@
+{{- if and .Values.profiles.full (eq .Values.storage.mode "local") }}
+{{- $dokuta := index .Values "dokuta-onprem" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-dokuta-bootstrap
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "15"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      enableServiceLinks: false
+      restartPolicy: Never
+      {{- with .Values.global.imagePullSecret }}
+      imagePullSecrets:
+        - name: {{ . | quote }}
+      {{- end }}
+      containers:
+        - name: bootstrap
+          image: "{{ with .Values.global.imageRegistry }}{{ . }}/{{ end }}{{ $dokuta.fastapi.image.repository }}:{{ $dokuta.fastapi.image.tag }}"
+          imagePullPolicy: {{ $dokuta.fastapi.image.pullPolicy }}
+          command:
+            - python
+            - -c
+            - |
+              import os, time
+              from pathlib import Path
+              import psycopg2
+              deadline = time.monotonic() + 180
+              while True:
+                  try:
+                      connection = psycopg2.connect(os.environ['POSTGRES_URI'], connect_timeout=5)
+                      break
+                  except psycopg2.OperationalError:
+                      if time.monotonic() >= deadline:
+                          raise RuntimeError('Dokuta database did not become reachable') from None
+                      time.sleep(2)
+              # These local migrations are idempotent and shipped in the API image.
+              core = Path('/app/migrations/postgres/20260522000000_local_core.sql')
+              workflow = Path('/app/migrations/postgres/20260723000000_generation_workflow.sql')
+              with connection:
+                  with connection.cursor() as cursor:
+                      cursor.execute(core.read_text())
+              if workflow.exists():
+                  with connection.cursor() as cursor:
+                      cursor.execute(workflow.read_text())
+                  connection.commit()
+              with connection:
+                  with connection.cursor() as cursor:
+                      cursor.execute("INSERT INTO users (customer_id) VALUES (%s) ON CONFLICT (customer_id) DO NOTHING", ('docsie-self-hosted',))
+                      cursor.execute("INSERT INTO api_keys (key, customer_id) VALUES (%s, %s) ON CONFLICT (key) DO NOTHING", (os.environ['DOKUTA_SERVICE_API_KEY'], 'docsie-self-hosted'))
+                      cursor.execute("SELECT customer_id FROM api_keys WHERE key=%s", (os.environ['DOKUTA_SERVICE_API_KEY'],))
+                      assert cursor.fetchone()[0] == 'docsie-self-hosted', 'Service key belongs to another account'
+              connection.close()
+              print('Dokuta local schema and service account ready')
+          env:
+            - name: POSTGRES_URI
+              valueFrom:
+                secretKeyRef:
+                  name: docsie-platform-derived
+                  key: DOKUTA_POSTGRES_URI
+            - name: DOKUTA_SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: docsie-platform-secrets
+                  key: DOKUTA_SERVICE_API_KEY
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+{{- end }}

@@ -50,6 +50,33 @@ class DistributionTests(unittest.TestCase):
             self.assertEqual(runtime["image"], app["image"])
             self.assertEqual(runtime["envFrom"], app["envFrom"])
 
+    def test_full_profile_wires_dokuta_service_auth_and_bootstrap(self):
+        docs = self.render({"profiles": {"full": True}})
+        resources = {(d["kind"], d["metadata"]["name"]): d for d in docs}
+        for name in ("dokuta", "dokuta-fastapi", "dokuta-celery", "collaboration-relay", "dokuta-pptx-renderer"):
+            self.assertIn(("Deployment", name), resources)
+        primary = resources[("Secret", "docsie-platform-secrets")]["stringData"]
+        derived = resources[("Secret", "docsie-platform-derived")]["stringData"]
+        self.assertEqual(derived["DOKUTA_API_KEY"], primary["DOKUTA_SERVICE_API_KEY"])
+        self.assertEqual(derived["DOKUTA_API_URL"], "http://dokuta-fastapi:8880/api/v1")
+        job = resources[("Job", "docsie-dokuta-bootstrap")]
+        self.assertEqual(job["metadata"]["annotations"]["helm.sh/hook-weight"], "15")
+        container = job["spec"]["template"]["spec"]["containers"][0]
+        api = resources[("Deployment", "dokuta-fastapi")]["spec"]["template"]["spec"]
+        self.assertEqual(container["image"], api["containers"][0]["image"])
+        self.assertFalse(api["enableServiceLinks"])
+        secrets = {d["metadata"]["name"]: set(d.get("stringData", {})) | set(d.get("data", {}))
+                   for d in docs if d["kind"] == "Secret"}
+        for name in ("dokuta", "dokuta-fastapi", "dokuta-celery"):
+            for app in resources[("Deployment", name)]["spec"]["template"]["spec"]["containers"]:
+                for env in app.get("env", []):
+                    ref = env.get("valueFrom", {}).get("secretKeyRef", {})
+                    if ref and not ref.get("optional"):
+                        self.assertIn(ref["key"], secrets[ref["name"]], (name, env["name"]))
+        key = next(e for e in container["env"] if e["name"] == "DOKUTA_SERVICE_API_KEY")
+        self.assertEqual(key["valueFrom"]["secretKeyRef"],
+                         {"name": "docsie-platform-secrets", "key": "DOKUTA_SERVICE_API_KEY"})
+
     def aws_values(self, public=False):
         outputs = {
             "docsie_domain": {"value": "docs.example.test"},
