@@ -36,7 +36,7 @@ A 400-GB working disk is a planning allowance, not a promise that a large retain
 
 ## Size by workload, not registered users
 
-Record concurrent active users; concurrent imports and videos; pages and source-video hours per month; resolution and sampling cadence; generated speech characters; simultaneous voice calls; retention; and required completion latency. A 100-user trial license does not imply 100 concurrent video jobs.
+Record concurrent active users; concurrent imports and videos; pages and source-video hours per month; resolution and sampling cadence; generated speech characters; simultaneous voice calls; retention; and required completion latency. The free 10-user license does not imply capacity for 10 concurrent video jobs.
 
 For each candidate configuration, test typical and large inputs at intended concurrency. Measure peak resident memory, CPU saturation, disk high-water mark, queue wait, processing time per source hour, inference tokens, retries and cold/warm model latency. For interactive voice, measure time to first audio and interruption behavior as well as throughput. Reserve rolling-update/failure headroom; a single machine is not high availability. Record output quality and human editing time alongside infrastructure metrics.
 

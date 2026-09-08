@@ -5,15 +5,27 @@ You may download, copy and modify the deployment scripts, chart templates and
 configuration examples in this repository to evaluate, install and operate a
 properly licensed copy of Docsie. Keep this notice with copies of these files.
 
-The Docsie application, container images and embedded application components
-remain proprietary. This repository does not grant an open-source license to
-those components. Application use is governed by the applicable Docsie license
-and evaluation terms supplied with your installation or order.
+Docsie Self-Hosted Application License — Free Tier
+Effective September 8, 2026
 
-The agreed offering is free personal non-commercial use, a 30-day business
-evaluation for up to 100 application users, and a paid license for continued
-commercial use. Work for an employer, client or business is commercial use.
-This notice grants no right to resell Docsie or offer it as a hosted service.
+The Docsie application, container images and embedded application components
+remain proprietary. No open-source license to those components is granted.
+
+Likalo LLC grants you a non-exclusive right to install and use Docsie Self-Hosted
+on infrastructure you control, free of license fees for up to 10 active
+application users per installation. Personal and commercial use are permitted,
+including internal use by a team within a company. There is no time limit on
+this free tier, and it is not a time-limited trial.
+
+More than 10 active application users requires a paid commercial license from
+Docsie. Anonymous readers of published documentation do not count as application
+users. Infrastructure, storage and model inference costs remain your responsibility.
+
+This notice grants no right to resell Docsie or offer Docsie itself as a hosted
+service to third parties. Keep proprietary notices intact. Rights not expressly
+granted remain reserved. This free-tier grant supersedes the earlier personal-only
+and 30-day business-evaluation offer in this distribution. Separately negotiated
+commercial agreements remain governed by their own terms.
 
 Third-party software remains subject to its own licenses. This notice does not
 replace or restrict rights granted by those licenses.

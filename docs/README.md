@@ -38,6 +38,10 @@
 
 ## Common questions
 
+**Is commercial use free?** Yes, for up to 10 active application users per
+installation, with no time limit. More than 10 users requires a paid commercial
+license. Infrastructure and inference costs are supplied by the operator.
+
 **Is Docsie open source?** No. This is a public deployment repository for a
 proprietary application. See [the distribution notice](../LICENSE) and [terms](LICENSING.md).
 

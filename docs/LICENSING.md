@@ -1,28 +1,40 @@
 # Self-hosted licensing
 
-Docsie is proprietary software. Public deployment tooling and free personal
-use do not make the application open source.
+**Docsie Self-Hosted is free for up to 10 users, including commercial use, with no time limit.**
 
-| Use | Offering |
+Run it for personal projects, a small business or a team inside a large company.
+The free tier is not a trial and does not expire after 30 days. More than 10 users
+requires a paid commercial license.
+
+| Use | License |
 | --- | --- |
-| Personal, non-commercial projects | Free, one active application user |
-| Business evaluation | 30 days, up to 100 active application users |
-| Continued business use | Paid commercial license |
+| Up to 10 active application users, personal or commercial | Free, no time limit |
+| More than 10 active application users | Paid commercial license |
 
-Work for an employer, a client or a business requires an evaluation or commercial
-license regardless of who owns the machine. Anonymous published-portal readers
-are not application seats. Infrastructure, storage and inference costs are yours.
+The allowance applies per installation and counts active application users, not
+concurrent sessions. Anonymous published-portal readers are not application seats.
+Infrastructure, storage and inference costs are yours.
 
-## Access and renewal
+Docsie remains proprietary. Free use and public deployment tooling do not make
+the application open source. See the [license grant and distribution notice](../LICENSE).
+The free tier does not grant a right to resell Docsie or operate Docsie itself
+as a hosted service for third parties.
 
-Request an evaluation at https://www.docsie.io/demo/. Docsie provides registry
-access and evaluation terms. Trial extensions can be arranged with the team.
-A commercial license upgrades the existing installation without moving content.
+## Access and upgrades
+
+Follow [installation instructions](INSTALL_KUBERNETES.md) and
+[public image availability](PUBLIC_IMAGES.md) for the current release. If a required
+image still needs registry access, [contact Docsie](https://www.docsie.io/demo/).
+That release-access requirement does not impose a time limit on the free license.
+
+Contact Docsie when your installation needs more than 10 users or you want a
+commercial support agreement. A paid license can cover the existing installation;
+you do not need to move your content solely to change licensing tiers.
 
 ## Technical enforcement
 
 The preview image does not include the new offline-license enforcement work.
-License terms still apply. Request image credentials and evaluation terms from
+The 10-user license terms still apply. Obtain any required image credentials from
 Docsie; do not enable enforcement settings or assume an activation command is
 available until the supplied image documents that capability.
 
