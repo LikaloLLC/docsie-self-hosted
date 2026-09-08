@@ -3,6 +3,10 @@
 This repository contains deployment tooling and documentation for proprietary
 Docsie. Contributions here do not change the application's license.
 
+Start with the [issue forms](https://github.com/LikaloLLC/docsie-self-hosted/issues/new/choose)
+and follow the [issue and support rules](SUPPORT.md). Report security vulnerabilities
+privately using [SECURITY.md](SECURITY.md).
+
 For chart or installation documentation improvements:
 
 1. Describe the problem and affected release in an issue or pull request.

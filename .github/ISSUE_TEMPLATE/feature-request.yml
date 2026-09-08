@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest an improvement to self-hosted deployment or product workflows.
+title: '[Feature]: '
+body:
+- type: markdown
+  attributes:
+    value: 'Thanks for helping improve Docsie Self-Hosted. Read our [issue rules](https://github.com/LikaloLLC/docsie-self-hosted/blob/main/SUPPORT.md).
+      This is a public tracker: use a synthetic example and redact logs. Report vulnerabilities
+      through [our security contact](https://www.docsie.io/security/).'
+- type: checkboxes
+  id: checks
+  attributes:
+    label: Before submitting
+    options:
+    - label: I searched existing issues and checked the documentation for my release.
+      required: true
+    - label: I removed secrets, customer content, private infrastructure details,
+        and personal data.
+      required: true
+- type: textarea
+  id: problem
+  attributes:
+    label: Problem or use case
+    description: Who needs this, and what are they trying to accomplish?
+  validations:
+    required: true
+- type: textarea
+  id: outcome
+  attributes:
+    label: Desired outcome
+    description: Describe how success would look. Include deployment constraints if
+      relevant.
+  validations:
+    required: true
+- type: textarea
+  id: alternatives
+  attributes:
+    label: Alternatives or workarounds
+    description: What have you tried or considered?
+  validations:
+    required: false

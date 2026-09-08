@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+- name: Private security report
+  url: https://www.docsie.io/security/
+  about: Report vulnerabilities privately. Never include exploit details or credentials
+    in a public issue.
+- name: Licensing, account access, and commercial support
+  url: https://www.docsie.io/support/
+  about: For private account questions or support covered by your agreement, contact
+    Docsie.

@@ -1,0 +1,76 @@
+name: Installation or upgrade problem
+description: Get help with setup, image access, upgrades, or deployment configuration.
+title: '[Install]: '
+body:
+- type: markdown
+  attributes:
+    value: 'Thanks for helping improve Docsie Self-Hosted. Read our [issue rules](https://github.com/LikaloLLC/docsie-self-hosted/blob/main/SUPPORT.md).
+      This is a public tracker: use a synthetic example and redact logs. Report vulnerabilities
+      through [our security contact](https://www.docsie.io/security/).'
+- type: checkboxes
+  id: checks
+  attributes:
+    label: Before submitting
+    options:
+    - label: I searched existing issues and checked the documentation for my release.
+      required: true
+    - label: I removed secrets, customer content, private infrastructure details,
+        and personal data.
+      required: true
+- type: input
+  id: version
+  attributes:
+    label: Release and images
+    description: Release tag or commit, chart version, and relevant image tag/digest.
+      Use “unknown” if unavailable.
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Deployment environment
+    description: OS, AMD64/ARM64, Kubernetes/k3s and Helm versions, CPU/RAM, install
+      method, enabled services, and local or hosted AI if relevant. Do not include
+      account IDs, private hostnames, or endpoint credentials.
+  validations:
+    required: true
+- type: dropdown
+  id: stage
+  attributes:
+    label: Where does it fail?
+    description: Select the closest stage.
+    options:
+    - Prerequisites or image pull
+    - First installation
+    - Migration or administrator setup
+    - Login, publishing, storage, or search
+    - AI or media processing
+    - Upgrade or rollback
+    - Other
+  validations:
+    required: true
+- type: textarea
+  id: attempt
+  attributes:
+    label: Command and result
+    description: Show a redacted command, the error, what you expected, and relevant
+      troubleshooting already attempted. Replace all sensitive values with placeholders.
+  validations:
+    required: true
+- type: textarea
+  id: impact
+  attributes:
+    label: Existing installation and impact
+    description: Is this a new installation or an upgrade? State the previous version
+      and whether access or existing data is affected. Do not share the data itself.
+  validations:
+    required: true
+- type: textarea
+  id: evidence
+  attributes:
+    label: Redacted evidence
+    description: Paste only the relevant error lines or a sanitized screenshot. Do
+      not attach complete values files, rendered Secrets, kubeconfigs, Terraform state,
+      customer documents, or unreviewed logs.
+  validations:
+    required: false

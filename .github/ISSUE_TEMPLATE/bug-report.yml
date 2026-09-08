@@ -1,0 +1,67 @@
+name: Bug report
+description: Report incorrect behavior in a self-hosted installation, chart, or tool.
+title: '[Bug]: '
+body:
+- type: markdown
+  attributes:
+    value: 'Thanks for helping improve Docsie Self-Hosted. Read our [issue rules](https://github.com/LikaloLLC/docsie-self-hosted/blob/main/SUPPORT.md).
+      This is a public tracker: use a synthetic example and redact logs. Report vulnerabilities
+      through [our security contact](https://www.docsie.io/security/).'
+- type: checkboxes
+  id: checks
+  attributes:
+    label: Before submitting
+    options:
+    - label: I searched existing issues and checked the documentation for my release.
+      required: true
+    - label: I removed secrets, customer content, private infrastructure details,
+        and personal data.
+      required: true
+- type: input
+  id: version
+  attributes:
+    label: Release and images
+    description: Release tag or commit, chart version, and relevant image tag/digest.
+      Use “unknown” if unavailable.
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Deployment environment
+    description: OS, AMD64/ARM64, Kubernetes/k3s and Helm versions, CPU/RAM, install
+      method, enabled services, and local or hosted AI if relevant. Do not include
+      account IDs, private hostnames, or endpoint credentials.
+  validations:
+    required: true
+- type: textarea
+  id: steps
+  attributes:
+    label: Steps to reproduce
+    description: Provide a minimal example using synthetic content and explain how
+      to repeat the problem.
+  validations:
+    required: true
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behavior
+    description: What should happen?
+  validations:
+    required: true
+- type: textarea
+  id: actual
+  attributes:
+    label: Actual behavior
+    description: What happened, and which workflow is affected?
+  validations:
+    required: true
+- type: textarea
+  id: evidence
+  attributes:
+    label: Redacted evidence
+    description: Paste only the relevant error lines or a sanitized screenshot. Do
+      not attach complete values files, rendered Secrets, kubeconfigs, Terraform state,
+      customer documents, or unreviewed logs.
+  validations:
+    required: false

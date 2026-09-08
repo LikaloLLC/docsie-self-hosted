@@ -1,0 +1,41 @@
+name: Documentation improvement
+description: Report missing, confusing, or incorrect installation documentation.
+title: '[Docs]: '
+body:
+- type: markdown
+  attributes:
+    value: 'Thanks for helping improve Docsie Self-Hosted. Read our [issue rules](https://github.com/LikaloLLC/docsie-self-hosted/blob/main/SUPPORT.md).
+      This is a public tracker: use a synthetic example and redact logs. Report vulnerabilities
+      through [our security contact](https://www.docsie.io/security/).'
+- type: checkboxes
+  id: checks
+  attributes:
+    label: Before submitting
+    options:
+    - label: I searched existing issues and checked the documentation for my release.
+      required: true
+    - label: I removed secrets, customer content, private infrastructure details,
+        and personal data.
+      required: true
+- type: input
+  id: page
+  attributes:
+    label: Documentation page
+    description: Link to the page and identify the heading or section.
+  validations:
+    required: true
+- type: textarea
+  id: problem
+  attributes:
+    label: What needs to change?
+    description: Explain what is incorrect or missing; include the affected release
+      if relevant.
+  validations:
+    required: true
+- type: textarea
+  id: suggestion
+  attributes:
+    label: Suggested correction
+    description: Provide suggested wording or the information you expected to find.
+  validations:
+    required: false
