@@ -30,6 +30,37 @@ class DistributionTests(unittest.TestCase):
             ], check=True, capture_output=True, text=True)
         return [doc for doc in yaml.safe_load_all(result.stdout) if doc]
 
+    def test_install_profiles_enable_enterprise_mode_for_all_docsie_processes(self):
+        cases = {
+            "kb": {},
+            "kb-ai": {"profiles": {"kbAi": True}},
+            "full": {"profiles": {"full": True}},
+            "aws": self.aws_values(),
+        }
+        for profile, values in cases.items():
+            with self.subTest(profile=profile):
+                values["bootstrap"] = {"enabled": True, "adminEmail": "admin@example.test"}
+                docs = self.render(values)
+                web = next(d for d in docs if d["kind"] == "Deployment"
+                           and d["metadata"]["name"] == "docsie-web")
+                app_image = web["spec"]["template"]["spec"]["containers"][0]["image"]
+                checked = set()
+                for resource in docs:
+                    if resource["kind"] not in {"Deployment", "StatefulSet", "Job"}:
+                        continue
+                    for container in resource["spec"]["template"]["spec"]["containers"]:
+                        if container["image"] != app_image:
+                            continue
+                        name = resource["metadata"]["name"]
+                        checked.add(name)
+                        for key, expected in (("ENTERPRISE_MODE", "true"),
+                                              ("DJANGO_SETTINGS_MODULE", "config.settings.onprem")):
+                            entries = [e for e in container.get("env", []) if e["name"] == key]
+                            self.assertEqual(len(entries), 1, (profile, name, key))
+                            self.assertEqual(entries[0].get("value"), expected, (profile, name, key))
+                self.assertTrue({"docsie-web", "docsie-migrate", "docsie-bootstrap-admin"} <= checked)
+                self.assertTrue(any("celery" in name for name in checked), checked)
+
     def test_local_install_jobs_and_workloads_share_runtime_contract(self):
         values = yaml.safe_load((ROOT / "examples/local-rehearsal.yaml").read_text())
         docs = self.render(values)

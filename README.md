@@ -1,8 +1,8 @@
 # Docsie Self-Hosted
 
-**Free for up to 10 users, including commercial use, with no time limit.**
-Run Docsie on your own infrastructure. More than 10 users requires a paid
-commercial license. [Read the self-hosted terms](docs/LICENSING.md).
+**Free for up to 10 workspace users and 25 individual named portal users.**
+Unlimited public knowledge-base views. Personal or commercial use, with no time
+limit. Exceeding either user allowance requires a paid commercial license. [Read the self-hosted terms](docs/LICENSING.md).
 
 [Public Dokuta images (AMD64 + ARM64)](docs/PUBLIC_IMAGES.md) — UI, API, Celery and LiveKit preview images, with pull commands and Helm overrides.
 
@@ -35,7 +35,7 @@ Kubernetes you control, with your choice of local or hosted AI services.
 - Support, knowledge-management and enablement teams serving employees and customers.
 - Course creators, educators, consultants and training businesses building learning products.
 - Developers, DevOps teams and enterprise IT running knowledge workflows on their own infrastructure.
-- Individual self-hosters and homelab users; free for up to 10 active application users, including commercial use, with no time limit.
+- Individual self-hosters and homelab users; free for up to 10 workspace users and 25 individual named portal users, with unlimited public knowledge-base views, including commercial use with no time limit.
 
 ## What you can use Docsie for
 
@@ -137,8 +137,9 @@ Creators, educators, consultants and training businesses can turn videos and
 documents into structured courses and sell learner access through connected
 commerce/payment workflows. Docsie connects purchase entitlements to course or
 portal access; the chosen payment service and its integration need configuration.
-The free self-hosted license includes commercial use for up to 10 application users;
-more than 10 requires a paid commercial license.
+The free self-hosted license includes commercial use for up to 10 workspace users
+and 25 individual named portal users, with unlimited public knowledge-base views.
+Exceeding either user allowance requires a paid commercial license.
 
 **Example:** turn a workshop recording and its reference manual into a paid course,
 then grant buyers access to the lessons and assessments. Verify purchase, learner
@@ -347,9 +348,10 @@ sha256sum -c SHA256SUMS
 ## License and access
 
 Docsie is **not open source**. Public deployment tooling does not change the
-application license. Self-hosted use is free for up to 10 active application users,
-including commercial use, with no time limit. More than 10 users requires a paid
-commercial license. Infrastructure and model inference are supplied by the operator.
+application license. Self-hosted use is free for up to 10 workspace users and
+25 individual named portal users, with unlimited public knowledge-base views.
+Commercial use is included, with no time limit. Exceeding either user allowance
+requires a paid commercial license. Infrastructure and model inference are supplied by the operator.
 See [licensing](docs/LICENSING.md) and [distribution notice](LICENSE).
 
 ## Roadmap

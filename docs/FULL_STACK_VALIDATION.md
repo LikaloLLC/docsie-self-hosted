@@ -49,3 +49,12 @@ local migrations and creates the service account without rotating its key.
 
 The local test is mixed architecture on an 8 GiB Docker VM and does not establish
 production sizing. No AWS or customer cluster was modified.
+
+## Changing model configuration
+
+The Dokuta workloads read model settings from Kubernetes Secrets at process
+startup. After changing those settings with Helm, restart `dokuta`,
+`dokuta-fastapi` and `dokuta-celery` in the explicitly selected kubeconfig and
+namespace. Drain active jobs before restarting workers in a real installation.
+The local retry uses a 600-second timeout and a three-frame cap solely for the
+synthetic fixture; that frame cap is not a production quality recommendation.

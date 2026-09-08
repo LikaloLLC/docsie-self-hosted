@@ -12,14 +12,22 @@ The Docsie application, container images and embedded application components
 remain proprietary. No open-source license to those components is granted.
 
 Likalo LLC grants you a non-exclusive right to install and use Docsie Self-Hosted
-on infrastructure you control, free of license fees for up to 10 active
-application users per installation. Personal and commercial use are permitted,
-including internal use by a team within a company. There is no time limit on
-this free tier, and it is not a time-limited trial.
+on infrastructure you control, free of license fees for up to 10 named workspace
+users and 25 individual named portal users per installation. Workspace users
+create and manage content. Portal users authenticate to access training and
+secure documentation; this allowance counts individual people, not tenant
+organizations or concurrent sessions. Each person counts once in each applicable
+allowance across the installation, even if they access multiple workspaces or
+portals. A person using both roles counts toward both allowances.
 
-More than 10 active application users requires a paid commercial license from
-Docsie. Anonymous readers of published documentation do not count as application
-users. Infrastructure, storage and model inference costs remain your responsibility.
+Public knowledge-base views are unlimited. Anonymous public documentation
+viewers do not consume either user allowance. Personal and commercial use are
+permitted, including internal use by a team within a company. There is no time
+limit on this free tier, and it is not a time-limited trial.
+
+Exceeding either 10 named workspace users or 25 individual named portal users
+requires a paid commercial license from Docsie. Infrastructure, storage and
+model inference costs remain your responsibility.
 
 This notice grants no right to resell Docsie or offer Docsie itself as a hosted
 service to third parties. Keep proprietary notices intact. Rights not expressly

@@ -1,19 +1,25 @@
 # Self-hosted licensing
 
-**Docsie Self-Hosted is free for up to 10 users, including commercial use, with no time limit.**
+**Docsie Self-Hosted is free for up to 10 workspace users and 25 individual named
+portal users, with unlimited public knowledge-base views. Commercial use is
+included, with no time limit.**
 
 Run it for personal projects, a small business or a team inside a large company.
-The free tier is not a trial and does not expire after 30 days. More than 10 users
-requires a paid commercial license.
+The free tier is not a trial and does not expire after 30 days.
 
-| Use | License |
+| Allowance per installation | Free tier |
 | --- | --- |
-| Up to 10 active application users, personal or commercial | Free, no time limit |
-| More than 10 active application users | Paid commercial license |
+| Named workspace users creating and managing content | Up to 10 |
+| Individual named portal users accessing training and secure documentation | Up to 25 |
+| Public knowledge-base views | Unlimited |
+| Personal or commercial use | Included, no time limit |
 
-The allowance applies per installation and counts active application users, not
-concurrent sessions. Anonymous published-portal readers are not application seats.
-Infrastructure, storage and inference costs are yours.
+A paid commercial license is required when either user allowance is exceeded.
+Count each person once in each applicable allowance across the installation,
+even across multiple workspaces or portals. Someone using both roles counts
+toward both allowances. Portal users are individual people, not tenant
+organizations or concurrent sessions. Anonymous public documentation viewers
+consume neither allowance. Infrastructure, storage and inference costs are yours.
 
 Docsie remains proprietary. Free use and public deployment tooling do not make
 the application open source. See the [license grant and distribution notice](../LICENSE).
@@ -27,14 +33,14 @@ Follow [installation instructions](INSTALL_KUBERNETES.md) and
 image still needs registry access, [contact Docsie](https://www.docsie.io/demo/).
 That release-access requirement does not impose a time limit on the free license.
 
-Contact Docsie when your installation needs more than 10 users or you want a
+Contact Docsie when your installation needs more than 10 workspace users, more than 25 named portal users, or a
 commercial support agreement. A paid license can cover the existing installation;
 you do not need to move your content solely to change licensing tiers.
 
 ## Technical enforcement
 
 The preview image does not include the new offline-license enforcement work.
-The 10-user license terms still apply. Obtain any required image credentials from
+The workspace-user and portal-user allowances above still apply. Obtain any required image credentials from
 Docsie; do not enable enforcement settings or assume an activation command is
 available until the supplied image documents that capability.
 

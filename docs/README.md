@@ -38,8 +38,9 @@
 
 ## Common questions
 
-**Is commercial use free?** Yes, for up to 10 active application users per
-installation, with no time limit. More than 10 users requires a paid commercial
+**Is commercial use free?** Yes, for up to 10 workspace users and 25 individual
+named portal users per installation, with unlimited public knowledge-base views
+and no time limit. Exceeding either user allowance requires a paid commercial
 license. Infrastructure and inference costs are supplied by the operator.
 
 **Is Docsie open source?** No. This is a public deployment repository for a

@@ -47,3 +47,23 @@ an explicit, separately reviewed teardown.
 requires an explicit kubeconfig and provisions no cloud infrastructure. Configure
 image access and persistent storage first. See [LOCAL_VALIDATION.md](LOCAL_VALIDATION.md)
 for the isolated development rehearsal and its limitations.
+
+## Verify enterprise mode
+
+The platform chart defaults to `global.selfHosted: true`. It supplies
+`DJANGO_SETTINGS_MODULE=config.settings.onprem` and `ENTERPRISE_MODE=true` to
+Docsie web, Celery workers, migrations and administrator bootstrap. The Kubernetes,
+bundle and AWS installers all use this platform chart. Free-tier installations
+also run in enterprise mode; the license allowance is a separate concern.
+Keep these settings when supplying custom values or environment overrides.
+
+After installation, check the effective Django setting in the running web app:
+
+```bash
+kubectl --kubeconfig /path/to/kubeconfig -n docsie exec deployment/docsie-web -- \
+  python manage.py shell -c 'from django.conf import settings; print("ENTERPRISE_MODE=" + str(settings.ENTERPRISE_MODE)); assert settings.ENTERPRISE_MODE'
+```
+
+Use the installation's explicit kubeconfig and namespace. The expected result is
+`ENTERPRISE_MODE=True`. Chart rendering verifies configuration; this command
+verifies the setting loaded by the installed application image.

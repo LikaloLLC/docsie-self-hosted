@@ -25,8 +25,9 @@ You need:
 
 The instructions use `/path/to/kubeconfig`, namespace `docsie`, model
 `YOUR_MODEL`, and `MODEL_HOST`. Replace these placeholders consistently.
-Self-hosted use is free for up to 10 users, including commercial use, with no
-time limit. More than 10 users requires a paid commercial license. See [licensing](LICENSING.md).
+Self-hosted use is free for up to 10 workspace users and 25 individual named portal
+users, with unlimited public knowledge-base views. Commercial use is included,
+with no time limit. Exceeding either user allowance requires a paid commercial license. See [licensing](LICENSING.md).
 
 ## 2. Install Ollama and load a model
 
